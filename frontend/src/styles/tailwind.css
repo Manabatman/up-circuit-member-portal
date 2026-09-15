@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Chakra Petch", Verdana, Geneva, system-ui, sans-serif;
+  --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue",
+    Arial, sans-serif;
+
+  --color-circuit-navy: #0b0d1d;
+  --color-circuit-blue: #0c3970;
+  --color-bright-blue: #168fd3;
+  --color-cyan: #4fc3e8;
+  --color-indigo: #30358f;
+  --color-canvas: #f5f8fa;
+  --color-surface: #ffffff;
+  --color-surface-soft: #eef8ff;
+  --color-border: #d8e2ec;
+  --color-text-secondary: #635d6f;
+
+  --spacing-sidebar: 248px;
+  --width-content: 72rem;
+}
+
+@layer base {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .type-page-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+
+  .type-section-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .type-object-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+}

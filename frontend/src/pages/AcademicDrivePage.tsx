@@ -1,0 +1,1 @@
+export { AcademicDrivePage } from "./ResourceHubPage";

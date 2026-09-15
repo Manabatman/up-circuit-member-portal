@@ -1,0 +1,162 @@
+:root {
+  /* Brand */
+  --circuit-blue: #0c3970;
+  --bright-blue: #168fd3;
+  --cyan: #4fc3e8;
+  --indigo: #30358f;
+
+  /* Surfaces */
+  --sidebar-bg: #0b0d1d;
+  --sidebar-hover: rgba(79, 195, 232, 0.08);
+  --sidebar-active: rgba(22, 143, 211, 0.18);
+  --canvas: #f5f8fa;
+  --surface: #ffffff;
+  --surface-soft: #eef8ff;
+  --surface-muted: #e8eef4;
+
+  /* Text */
+  --text-primary: #0b0d1d;
+  --text-secondary: #635d6f;
+  --text-on-dark: #f5f8fa;
+  --text-on-dark-muted: rgba(245, 248, 250, 0.65);
+
+  /* Borders */
+  --border: #d8e2ec;
+  --border-strong: #b8c9d9;
+  --border-focus: var(--bright-blue);
+
+  /* Status */
+  --success: #77c393;
+  --success-bg: #e8f6ee;
+  --success-text: #1a5c38;
+  --pending: #ffc665;
+  --pending-bg: #fff8e8;
+  --pending-text: #7a5200;
+  --danger: #e5796d;
+  --danger-bg: #fdf0ee;
+  --danger-text: #8b2e24;
+
+  /* Derived interactive */
+  --primary: var(--bright-blue);
+  --primary-hover: #1278b5;
+  --primary-active: #0c3970;
+  --primary-soft: var(--surface-soft);
+
+  /* Typography — Chakra Petch for display/UI identity; body stays readable sans-serif */
+  --font-display: "Chakra Petch", Verdana, Geneva, "Segoe UI", system-ui, sans-serif;
+  --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue",
+    Arial, sans-serif;
+
+  /* Spacing (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-page: 2rem;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(12, 57, 112, 0.06), 0 4px 16px rgba(12, 57, 112, 0.06);
+  --shadow-modal: 0 8px 32px rgba(11, 13, 29, 0.24);
+
+  /* Layout */
+  --sidebar-width: 248px;
+  --sidebar-rail: 72px;
+  --content-max: 72rem;
+
+  /* Focus */
+  --focus-ring: 0 0 0 3px rgba(22, 143, 211, 0.35);
+
+  /* Gradients */
+  --gradient-brand: linear-gradient(135deg, var(--cyan) 0%, var(--bright-blue) 50%, var(--indigo) 100%);
+
+  /* Showcase surfaces */
+  --demo-chip-bg: #fff8e8;
+  --demo-chip-text: #7a5200;
+  --section-kicker: var(--text-secondary);
+  --calendar-today: rgba(79, 195, 232, 0.2);
+  --calendar-event-academic: #168fd3;
+  --calendar-event-org: #30358f;
+  --calendar-event-project: #0c3970;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--canvas);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: normal;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+main a:not([class]) {
+  color: var(--primary);
+}
+
+main a:not([class]):hover {
+  color: var(--primary-hover);
+}
+
+aside nav a {
+  color: var(--text-on-dark-muted);
+  text-decoration: none;
+}
+
+aside nav a:hover {
+  color: var(--text-on-dark);
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

@@ -1,7 +1,7 @@
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, time
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Text, func
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Text, Time, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,6 +20,9 @@ class Event(Base):
     category: Mapped[str] = mapped_column(Text, nullable=False)
     starts_on: Mapped[date] = mapped_column(Date, nullable=False)
     ends_on: Mapped[date | None] = mapped_column(Date)
+    start_time: Mapped[time | None] = mapped_column(Time, nullable=True)
+    end_time: Mapped[time | None] = mapped_column(Time, nullable=True)
+    location: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_flagship: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     image_url: Mapped[str | None] = mapped_column(Text)
     link_url: Mapped[str | None] = mapped_column(Text)

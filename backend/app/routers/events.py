@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import uuid
 from datetime import date
 
@@ -19,7 +20,11 @@ router = APIRouter(tags=["events"])
 def _client_ip(request: Request) -> str | None:
     if request.client is None:
         return None
-    return request.client.host
+    raw = request.client.host
+    try:
+        return str(ipaddress.ip_address(raw))
+    except ValueError:
+        return None
 
 
 @router.get("/events", response_model=EventList)

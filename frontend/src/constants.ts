@@ -11,6 +11,8 @@ export const RENEWALS_PATH = "/renewals";
 export const VERIFIED_RESOURCE_TITLES = {
   academicDrive: "Official Academic Drive",
   constitution: "UP Circuit Constitution",
+  divisionHubs: "Division Hubs",
+  googleCalendar: "Official Google Calendar",
 } as const;
 
 /** Official logo asset — drop `circuit-logo.png` in frontend/public/ */

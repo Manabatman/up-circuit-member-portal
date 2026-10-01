@@ -4,42 +4,62 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchCurrentAcademicYear, type AcademicYear } from "../api/academicYear";
 import type { MeResponse } from "../api/auth";
 import { fetchEvents, type PortalEvent } from "../api/events";
-import { fetchOwnProfile, type MemberSelf } from "../api/members";
+import { fetchOwnMembership, fetchOwnProfile, type MembershipSelf, type MemberSelf } from "../api/members";
 import { fetchResources, type Resource } from "../api/resources";
-import {
-  RENEWALS_PATH,
-  ROUTE_LABELS,
-  SHOWCASE_ROUTES,
-  VERIFIED_RESOURCE_TITLES,
-} from "../constants";
+import { RENEWAL_URL, RENEWALS_PATH, SHOWCASE_ROUTES } from "../constants";
 import {
   ErrorState,
-  EventCardLink,
+  Eyebrow,
+  EventDateBlock,
+  MembershipPill,
+  OutlinedExternalButton,
   PageShell,
-  PrimaryExternalButton,
-  SectionHeader,
-  StatusBadge,
+  PortalCard,
+  QuickAccessCard,
 } from "../components/ui";
-import { formatEventPeriod, mapEventCategoryForCard } from "../utils/eventDates";
+import {
+  endOfWeekIso,
+  formatDashboardDateEyebrow,
+  formatEventRowMeta,
+  upcomingEventsFromToday,
+} from "../utils/eventDates";
+import { resolvePortalLinks } from "../utils/portalLinks";
 import styles from "../components/ui.module.css";
+import { Icon } from "../components/Icon";
 
-const QUICK_ACTIONS = [
-  { key: "academic_drive", label: "Academic Drive" },
-  { key: "renew_membership", label: "Renew Membership" },
-  { key: "resources", label: "Resources" },
-  { key: "projects", label: "Flagship Events", path: SHOWCASE_ROUTES.projects.path },
-] as const;
+function membershipHeadline(status: string): string {
+  const normalized = status.toUpperCase();
+  if (normalized === "RENEWED") return "You're all set for this academic year.";
+  if (normalized === "PENDING") return "Your renewal is being reviewed.";
+  return "Renew your membership for this academic year.";
+}
+
+function membershipBody(membership: MembershipSelf | null, year: AcademicYear | null): string {
+  const label = membership?.academic_year_label ?? year?.label;
+  const normalized = (membership?.membership_status ?? "").toUpperCase();
+  if (normalized === "RENEWED") {
+    return `Your membership is active for ${label ?? "the current academic year"}. Details and updates are handled in the official membership portal.`;
+  }
+  if (normalized === "PENDING") {
+    return "We'll update your portal access once your renewal is confirmed in the official membership portal.";
+  }
+  return "Complete renewal in the official membership portal to restore full member access for this academic year.";
+}
 
 export function DashboardPage() {
   const me = useOutletContext<MeResponse>();
   const [year, setYear] = useState<AcademicYear | null>(null);
-  const [profile, setProfile] = useState<MemberSelf | null>(null);
+  const [, setProfile] = useState<MemberSelf | null>(null);
+  const [membership, setMembership] = useState<MembershipSelf | null>(null);
+  const [academicResources, setAcademicResources] = useState<Resource[]>([]);
   const [orgResources, setOrgResources] = useState<Resource[]>([]);
-  const [upcoming, setUpcoming] = useState<PortalEvent[]>([]);
+  const [weekEvents, setWeekEvents] = useState<PortalEvent[]>([]);
+  const [fallbackEvents, setFallbackEvents] = useState<PortalEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const needsRenewal =
-    me.membership_status === "NOT_RENEWED" || me.membership_status === "PENDING";
+  const today = useMemo(() => new Date(), []);
+  const dateEyebrow = useMemo(() => formatDashboardDateEyebrow(today), [today]);
+  const firstName = me.full_name.trim().split(/\s+/)[0] ?? me.full_name;
 
   useEffect(() => {
     fetchCurrentAcademicYear()
@@ -48,110 +68,164 @@ export function DashboardPage() {
         setError(err instanceof Error ? err.message : "Could not load academic year.");
       });
     fetchOwnProfile().then(setProfile).catch(() => undefined);
+    fetchOwnMembership().then(setMembership).catch(() => undefined);
+    fetchResources("academic")
+      .then((data) => setAcademicResources(data.items))
+      .catch(() => undefined);
     fetchResources("organizational")
       .then((data) => setOrgResources(data.items))
       .catch(() => undefined);
-    const today = new Date().toISOString().slice(0, 10);
-    fetchEvents({ from_date: today })
-      .then((data) => setUpcoming(data.items.slice(0, 3)))
+
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const weekEnd = endOfWeekIso(new Date());
+    fetchEvents({ from_date: todayIso, to_date: weekEnd })
+      .then((data) => setWeekEvents(data.items))
+      .catch(() => undefined);
+    fetchEvents({ from_date: todayIso })
+      .then((data) => setFallbackEvents(upcomingEventsFromToday(data.items, 5)))
       .catch(() => undefined);
   }, []);
 
-  const constitution = useMemo(
-    () => orgResources.find((r) => r.title === VERIFIED_RESOURCE_TITLES.constitution),
-    [orgResources],
+  const portalLinks = useMemo(
+    () => resolvePortalLinks(academicResources, orgResources),
+    [academicResources, orgResources],
   );
 
-  const programLine =
-    profile?.degree_program || profile?.year_level
-      ? [profile.degree_program, profile.year_level ? `Year ${profile.year_level}` : null]
-          .filter(Boolean)
-          .join(" · ")
-      : null;
-
-  const actions = QUICK_ACTIONS.filter((action) =>
-    action.key === "projects" ? true : me.route_keys.includes(action.key),
+  const displayEvents = weekEvents.length > 0 ? weekEvents : fallbackEvents;
+  const sortedEvents = useMemo(
+    () =>
+      [...displayEvents].sort((a, b) => {
+        const cmp = a.starts_on.localeCompare(b.starts_on);
+        if (cmp !== 0) return cmp;
+        return (a.start_time ?? "").localeCompare(b.start_time ?? "");
+      }),
+    [displayEvents],
   );
+
+  const membershipStatus = membership?.membership_status ?? me.membership_status;
+  const academicYearLabel =
+    membership?.academic_year_label ?? (year ? `AY ${year.label}` : null);
 
   return (
     <PageShell>
-      <header className="mb-8">
-        <p className="mb-2 text-xs font-medium tracking-wide text-text-secondary">Home</p>
-        <h1 className="type-page-title m-0 text-[2rem] leading-tight text-circuit-navy">
-          Welcome back, {me.full_name.split(" ")[0]}
-        </h1>
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-text-secondary">
-          <StatusBadge status={me.membership_status} />
-          {year ? <span>Academic year {year.label}</span> : null}
-          {programLine ? <span>{programLine}</span> : null}
-        </div>
-        {needsRenewal ? (
-          <p className="mt-3 text-sm">
-            <Link
-              to={RENEWALS_PATH}
-              className="font-medium text-bright-blue no-underline hover:underline"
-            >
-              Renew membership for this academic year
-            </Link>
+      <div className={styles.dashboardWelcomeRow}>
+        <div className={styles.dashboardWelcomeMain}>
+          <Eyebrow>{dateEyebrow}</Eyebrow>
+          <h1 className={styles.dashboardWelcomeTitle}>Welcome back, {firstName}.</h1>
+          <p className={styles.dashboardWelcomeTagline}>
+            Everything you need from Circuit, in one place.
           </p>
-        ) : null}
-      </header>
+        </div>
+        <div className={styles.dashboardMembershipMini}>
+          <div className={styles.dashboardMembershipMiniHead}>
+            <span>Membership</span>
+            <MembershipPill status={membershipStatus} />
+          </div>
+          {academicYearLabel ? (
+            <p className={styles.dashboardMembershipMiniYear}>{academicYearLabel}</p>
+          ) : null}
+        </div>
+      </div>
 
-      <section className="mb-10">
-        <SectionHeader title="Quick actions" />
-        <div className={styles.dashboardActionGrid}>
-          {actions.map((action) => {
-            const path =
-              action.key === "projects"
-                ? SHOWCASE_ROUTES.projects.path
-                : (ROUTE_LABELS[action.key]?.path ?? "/dashboard");
-            const label =
-              action.key === "projects"
-                ? action.label
-                : (ROUTE_LABELS[action.key]?.label ?? action.label);
-            return (
-              <Link key={action.key} to={path} className={styles.dashboardActionCard}>
-                {label}
-              </Link>
-            );
-          })}
+      <section className="mb-8">
+        <div className={styles.dashboardSectionHead}>
+          <div>
+            <Eyebrow>START HERE</Eyebrow>
+            <h2 className={styles.dashboardSectionTitle}>Where do you need to go?</h2>
+          </div>
+          <p className={styles.dashboardSectionHint}>Links open in their official workspace</p>
+        </div>
+        <div className={styles.quickAccessGrid}>
+          <QuickAccessCard
+            title="Academic Drive"
+            description="Reviewers, samplex, and course materials"
+            href={portalLinks.academicDrive}
+            icon="academic"
+          />
+          <QuickAccessCard
+            title="Circuit Constitution"
+            description="The organization's governing document"
+            href={portalLinks.constitution}
+            icon="doc"
+          />
+          <QuickAccessCard
+            title="Division Hubs"
+            description="Files, trackers, and division workspaces"
+            href={portalLinks.divisionHubs}
+            icon="grid"
+          />
         </div>
       </section>
 
-      <section className="mb-10">
-        <SectionHeader title="Upcoming" />
-        {upcoming.length === 0 ? (
-          <p className="text-sm text-text-secondary">No upcoming events on the calendar yet.</p>
-        ) : (
-          <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
-            {upcoming.map((event) => (
-              <li key={event.id}>
-                <EventCardLink
-                  to={`/calendar/${event.id}`}
-                  title={event.title}
-                  category={mapEventCategoryForCard(event.category)}
-                  dateLabel={formatEventPeriod(event)}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="mt-4 text-sm">
-          <Link
-            to={SHOWCASE_ROUTES.calendar.path}
-            className="font-medium text-bright-blue no-underline hover:underline"
-          >
-            View calendar
-          </Link>
-        </p>
-      </section>
+      <div className={styles.dashboardLowerGrid}>
+        <PortalCard>
+          <div className={styles.dashboardCardHead}>
+            <div>
+              <Eyebrow>COMING UP</Eyebrow>
+              <h2 className={styles.dashboardCardTitle}>This week</h2>
+            </div>
+            <Link to={SHOWCASE_ROUTES.calendar.path} className={styles.dashboardCardLink}>
+              View calendar →
+            </Link>
+          </div>
+          {sortedEvents.length === 0 ? (
+            <div>
+              <p className="m-0 text-sm font-medium text-circuit-navy">No upcoming events</p>
+              <p className="mt-1 text-sm text-text-secondary">You&apos;re all caught up for now.</p>
+              <p className="mt-3 text-sm">
+                <Link
+                  to={SHOWCASE_ROUTES.calendar.path}
+                  className="font-medium text-bright-blue no-underline hover:underline"
+                >
+                  Open calendar
+                </Link>
+              </p>
+            </div>
+          ) : (
+            <ul className={styles.dashboardEventList}>
+              {sortedEvents.map((event) => (
+                <li key={event.id} className={styles.dashboardEventRow}>
+                  <EventDateBlock isoDate={event.starts_on} variant="dashboard" />
+                  <div className={styles.dashboardEventRowBody}>
+                    <Link
+                      to={`/calendar/${event.id}`}
+                      className={`${styles.dashboardEventTitleLink} ${styles.dashboardEventTitle}`}
+                    >
+                      {event.title}
+                    </Link>
+                    <p className={styles.dashboardEventMeta}>{formatEventRowMeta(event)}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </PortalCard>
 
-      {constitution ? (
-        <section>
-          <SectionHeader title="Quick access" />
-          <PrimaryExternalButton href={constitution.url}>{constitution.title}</PrimaryExternalButton>
-        </section>
-      ) : null}
+        <PortalCard>
+          <div className={styles.membershipInfoCardHead}>
+            <span className={styles.membershipInfoIcon} aria-hidden>
+              <Icon name="account" size={20} />
+            </span>
+            <MembershipPill status={membershipStatus} />
+          </div>
+          <Eyebrow>YOUR MEMBERSHIP</Eyebrow>
+          <h2 className={styles.membershipInfoHeadline}>
+            {membershipHeadline(membershipStatus)}
+          </h2>
+          <p className={styles.membershipInfoBody}>{membershipBody(membership, year)}</p>
+          {membershipStatus.toUpperCase() !== "RENEWED" ? (
+            <p className="mb-4 text-sm">
+              <Link
+                to={RENEWALS_PATH}
+                className="font-medium text-bright-blue no-underline hover:underline"
+              >
+                Renew membership for this academic year
+              </Link>
+            </p>
+          ) : null}
+          <OutlinedExternalButton href={RENEWAL_URL}>Open membership portal</OutlinedExternalButton>
+        </PortalCard>
+      </div>
 
       {error ? <ErrorState message={error} /> : null}
     </PageShell>

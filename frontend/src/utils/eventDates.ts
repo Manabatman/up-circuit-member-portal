@@ -51,3 +51,72 @@ export function categoryBarClass(category: string): string {
   if (key === "membership") return "calendarEventDot_membership";
   return "calendarEventDot_project";
 }
+
+/** Parse API time (HH:MM:SS or HH:MM) for display. */
+export function formatTimeOfDay(timeStr: string | null | undefined): string | null {
+  if (!timeStr) return null;
+  const parts = timeStr.split(":");
+  const hours = Number(parts[0]);
+  const minutes = Number(parts[1] ?? 0);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  const date = new Date(2000, 0, 1, hours, minutes);
+  return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+export function formatWeekdayLong(isoDate: string): string {
+  const d = new Date(`${isoDate}T12:00:00`);
+  return d.toLocaleDateString(undefined, { weekday: "long" });
+}
+
+export function formatEventRowMeta(event: PortalEvent): string {
+  const segments: string[] = [];
+  const weekday = formatWeekdayLong(event.starts_on);
+  segments.push(weekday);
+  const timeLabel = formatTimeOfDay(event.start_time);
+  if (timeLabel) segments.push(timeLabel);
+  if (event.location?.trim()) segments.push(event.location.trim());
+  return segments.join(" · ");
+}
+
+export function startOfWeekIso(reference: Date): string {
+  const d = new Date(reference);
+  const day = d.getDay();
+  d.setDate(d.getDate() - day);
+  d.setHours(12, 0, 0, 0);
+  return d.toISOString().slice(0, 10);
+}
+
+export function endOfWeekIso(reference: Date): string {
+  const d = new Date(reference);
+  const day = d.getDay();
+  d.setDate(d.getDate() + (6 - day));
+  d.setHours(12, 0, 0, 0);
+  return d.toISOString().slice(0, 10);
+}
+
+export function formatDashboardDateEyebrow(date: Date): string {
+  return date
+    .toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
+    .toUpperCase();
+}
+
+export function eventOccursInMonth(event: PortalEvent, year: number, month: number): boolean {
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 0);
+  const startIso = monthStart.toISOString().slice(0, 10);
+  const endIso = monthEnd.toISOString().slice(0, 10);
+  const eventEnd = eventEndDate(event);
+  return event.starts_on <= endIso && eventEnd >= startIso;
+}
+
+export function upcomingEventsFromToday(events: PortalEvent[], limit = 8): PortalEvent[] {
+  const today = new Date().toISOString().slice(0, 10);
+  return [...events]
+    .filter((e) => eventEndDate(e) >= today)
+    .sort((a, b) => {
+      const cmp = a.starts_on.localeCompare(b.starts_on);
+      if (cmp !== 0) return cmp;
+      return (a.start_time ?? "").localeCompare(b.start_time ?? "");
+    })
+    .slice(0, limit);
+}

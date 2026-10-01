@@ -27,7 +27,9 @@ export type IconName =
   | "doc"
   | "chat"
   | "chevronLeft"
-  | "chevronRight";
+  | "chevronRight"
+  | "arrowRight"
+  | "grid";
 
 const paths: Record<IconName, ReactNode> = {
   dashboard: (
@@ -176,6 +178,20 @@ const paths: Record<IconName, ReactNode> = {
   chevronRight: (
     <>
       <polyline points="9 18 15 12 9 6" />
+    </>
+  ),
+  arrowRight: (
+    <>
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </>
+  ),
+  grid: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
     </>
   ),
 };

@@ -87,6 +87,19 @@
   --calendar-event-academic: #168fd3;
   --calendar-event-org: #30358f;
   --calendar-event-project: #0c3970;
+
+  --event-cat-organization: #168fd3;
+  --event-cat-organization-bg: rgba(22, 143, 211, 0.12);
+  --event-cat-academic: #1a7f4b;
+  --event-cat-academic-bg: rgba(26, 127, 75, 0.12);
+  --event-cat-community: #c76a1a;
+  --event-cat-community-bg: rgba(199, 106, 26, 0.12);
+  --event-cat-membership: #7a5200;
+  --event-cat-membership-bg: rgba(255, 198, 101, 0.25);
+  --event-cat-deadline: #8b2e24;
+  --event-cat-deadline-bg: rgba(229, 121, 109, 0.15);
+  --event-cat-flagship: #30358f;
+  --event-cat-flagship-bg: rgba(48, 53, 143, 0.12);
 }
 
 *,

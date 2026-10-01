@@ -21,6 +21,8 @@ CONSTITUTION_URL = (
     "https://drive.google.com/file/d/0BwpnmRTN35zQQTBQVHNudnk4TnM/view"
     "?usp=sharing&resourcekey=0-odb6pGr4b4hkefdfJO4Fxw"
 )
+DIVISION_HUBS_URL = os.environ.get("DIVISION_HUBS_URL", "").strip()
+GOOGLE_CALENDAR_URL = os.environ.get("GOOGLE_CALENDAR_URL", "").strip()
 
 
 def _read_env_file(path: Path) -> dict[str, str]:
@@ -173,6 +175,32 @@ def main() -> None:
             resource_type="GOOGLE_DRIVE",
             display_order=0,
         )
+
+        if DIVISION_HUBS_URL:
+            _upsert_resource(
+                db,
+                category_id=org_category.id,
+                title="Division Hubs",
+                description="Division workspaces and shared files on Google Drive",
+                url=DIVISION_HUBS_URL,
+                resource_type="GOOGLE_DRIVE",
+                display_order=1,
+            )
+        else:
+            print("Skipping Division Hubs — set DIVISION_HUBS_URL to seed.")
+
+        if GOOGLE_CALENDAR_URL:
+            _upsert_resource(
+                db,
+                category_id=org_category.id,
+                title="Official Google Calendar",
+                description="Official Circuit Google Calendar for RSVPs and details",
+                url=GOOGLE_CALENDAR_URL,
+                resource_type="EXTERNAL_LINK",
+                display_order=2,
+            )
+        else:
+            print("Skipping Official Google Calendar — set GOOGLE_CALENDAR_URL to seed.")
 
         _deactivate_demo_resources(db)
         _deactivate_general_categories(db)

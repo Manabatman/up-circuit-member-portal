@@ -3,11 +3,16 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { CIRCUIT_LOGO_PATH, RENEWALS_PATH } from "../constants";
+import type { PortalEvent } from "../api/events";
+import {
+  eventCategoryCssModuleKey,
+  resolveEventCategoryDisplay,
+} from "../utils/eventCategory";
 import { formatResourceType, opensInLabel, resourceTypeIcon } from "../utils/resourceType";
 import type { DivisionPlaceholderVariant } from "../content/divisionVisuals";
 import type { CalendarEventCategory } from "../demo/calendar";
 import { DivisionPlaceholder, DivisionVisual, shortDivisionName } from "./DivisionVisual";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 import { ProjectVisual } from "./ProjectVisual";
 import styles from "./ui.module.css";
 
@@ -632,6 +637,143 @@ export function SessionSplash() {
       <BrandMark size="lg" />
       <Spinner label="Loading session…" />
     </div>
+  );
+}
+
+export function Eyebrow({ children }: { children: ReactNode }) {
+  return <p className={styles.eyebrow}>{children}</p>;
+}
+
+export function MembershipPill({ status }: { status: string }) {
+  const normalized = status.toUpperCase();
+  const className =
+    normalized === "RENEWED"
+      ? styles.membershipPillRenewed
+      : normalized === "NOT_RENEWED"
+        ? styles.membershipPillNotRenewed
+        : styles.membershipPillPending;
+  return (
+    <span className={className}>
+      <span className={styles.membershipPillDot} aria-hidden />
+      {membershipStatusLabel(status).toUpperCase()}
+    </span>
+  );
+}
+
+export function OutlinedExternalButton({
+  href,
+  children,
+  className,
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className={`${styles.outlinedExternalBtn} ${className ?? ""}`.trim()}
+    >
+      <span>{children}</span>
+      <Icon name="external" size={16} />
+    </a>
+  );
+}
+
+export function QuickAccessCard({
+  title,
+  description,
+  href,
+  icon,
+  footerLabel = "GOOGLE DRIVE",
+}: {
+  title: string;
+  description: string;
+  href: string | null;
+  icon: IconName;
+  footerLabel?: string;
+}) {
+  const inner = (
+    <>
+      <div className={styles.quickAccessTop}>
+        <span className={styles.quickAccessIconWrap} aria-hidden>
+          <Icon name={icon} size={20} className={styles.quickAccessIcon} />
+        </span>
+        <span className={styles.quickAccessArrow} aria-hidden>
+          <Icon name="arrowRight" size={18} />
+        </span>
+      </div>
+      <h3 className={styles.quickAccessTitle}>{title}</h3>
+      <p className={styles.quickAccessDesc}>{description}</p>
+      {href ? (
+        <span className={styles.quickAccessFooter}>
+          {footerLabel}
+          <Icon name="external" size={14} />
+        </span>
+      ) : (
+        <span className={styles.quickAccessFooterMuted}>Link not configured yet</span>
+      )}
+    </>
+  );
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className={`${styles.quickAccessCard} ${styles.quickAccessCardLink} no-underline hover:no-underline`}
+      >
+        {inner}
+      </a>
+    );
+  }
+
+  return <div className={`${styles.quickAccessCard} ${styles.quickAccessCardDisabled}`}>{inner}</div>;
+}
+
+export function EventDateBlock({
+  isoDate,
+  variant = "dashboard",
+}: {
+  isoDate: string;
+  variant?: "dashboard" | "agenda";
+}) {
+  const d = new Date(`${isoDate}T12:00:00`);
+  const day = d.getDate();
+  const month = d.toLocaleDateString(undefined, { month: "short" }).toUpperCase();
+  const weekday = d.toLocaleDateString(undefined, { weekday: "short" }).toUpperCase();
+  const blockClass =
+    variant === "agenda" ? styles.eventDateBlockAgenda : styles.eventDateBlockDashboard;
+
+  return (
+    <div className={blockClass} aria-hidden>
+      <span className={styles.eventDateBlockDay}>{day.toString().padStart(2, "0")}</span>
+      <span className={styles.eventDateBlockSub}>
+        {variant === "agenda" ? weekday : month}
+      </span>
+    </div>
+  );
+}
+
+export function EventCategoryTag({ event }: { event: PortalEvent }) {
+  const { label, styleKey } = resolveEventCategoryDisplay(event);
+  const modKey = eventCategoryCssModuleKey(styleKey);
+  const modClass = styles[modKey as keyof typeof styles] ?? styles.eventCat_community;
+  return <span className={`${styles.eventCategoryTag} ${modClass}`}>{label}</span>;
+}
+
+export function PortalCard({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`${styles.portalCard} ${className ?? ""}`.trim()}>{children}</section>
   );
 }
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import os
 import sys
-from datetime import date
+from datetime import date, time
 from pathlib import Path
 
 from sqlalchemy import create_engine, select
@@ -56,13 +56,59 @@ def main() -> None:
                 "display_order": 0,
             },
             {
+                "title": "Member's Assembly 01",
+                "description": "Monthly member assembly.",
+                "category": "ORGANIZATION",
+                "starts_on": date(2026, 10, 8),
+                "ends_on": None,
+                "start_time": time(18, 0),
+                "location": "EEEI Room 120",
+                "is_flagship": False,
+                "display_order": 1,
+            },
+            {
                 "title": "General Assembly",
                 "description": "Monthly GA for all members.",
                 "category": "ORGANIZATION",
                 "starts_on": date(2026, 10, 15),
                 "ends_on": None,
+                "start_time": time(18, 0),
+                "location": "EEEI Room 120",
                 "is_flagship": False,
-                "display_order": 1,
+                "display_order": 2,
+            },
+            {
+                "title": "Academic Affairs tutorial",
+                "description": "Academic affairs walkthrough for members.",
+                "category": "ACADEMIC",
+                "starts_on": date(2026, 10, 10),
+                "ends_on": None,
+                "start_time": time(14, 0),
+                "location": "EEEI Room 302",
+                "is_flagship": False,
+                "display_order": 3,
+            },
+            {
+                "title": "Circuit Sports Day",
+                "description": "Community sports day for all members.",
+                "category": "EVENT",
+                "starts_on": date(2026, 10, 17),
+                "ends_on": None,
+                "start_time": time(8, 0),
+                "location": "UP Academic Oval",
+                "is_flagship": False,
+                "display_order": 4,
+            },
+            {
+                "title": "Alumni Career Conversations",
+                "description": "Flagship alumni networking session.",
+                "category": "EVENT",
+                "starts_on": date(2026, 10, 24),
+                "ends_on": None,
+                "start_time": time(15, 0),
+                "location": "EEEI Building",
+                "is_flagship": True,
+                "display_order": 5,
             },
             {
                 "title": "SquEEEze",
@@ -91,6 +137,8 @@ def main() -> None:
                 select(Event).where(Event.title == item["title"], Event.is_active.is_(True))
             )
             if existing:
+                for key, value in item.items():
+                    setattr(existing, key, value)
                 continue
             db.add(Event(**item, is_active=True))
         db.commit()

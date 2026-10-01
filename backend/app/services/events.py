@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import date
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.auth.deps import AuthContext, check_permission
@@ -28,6 +28,9 @@ def _event_snapshot(event: Event) -> dict:
         "category": event.category,
         "starts_on": str(event.starts_on),
         "ends_on": str(event.ends_on) if event.ends_on else None,
+        "start_time": str(event.start_time) if event.start_time else None,
+        "end_time": str(event.end_time) if event.end_time else None,
+        "location": event.location,
         "is_flagship": event.is_flagship,
         "is_active": event.is_active,
     }
@@ -80,6 +83,9 @@ def create_event(
         category=data["category"],
         starts_on=data["starts_on"],
         ends_on=data.get("ends_on"),
+        start_time=data.get("start_time"),
+        end_time=data.get("end_time"),
+        location=data.get("location"),
         is_flagship=data.get("is_flagship", False),
         image_url=data.get("image_url"),
         link_url=data.get("link_url"),

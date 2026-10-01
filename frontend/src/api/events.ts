@@ -7,6 +7,9 @@ export type PortalEvent = {
   category: string;
   starts_on: string;
   ends_on: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  location: string | null;
   is_flagship: boolean;
   image_url: string | null;
   link_url: string | null;

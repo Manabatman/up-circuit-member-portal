@@ -26,6 +26,12 @@ vi.mock("../api/members", () => ({
     batch: null,
     membership_status: "RENEWED",
   }),
+  fetchOwnMembership: vi.fn().mockResolvedValue({
+    academic_year_label: "AY 2026-2027",
+    membership_status: "RENEWED",
+    renewed_at: "2026-08-01T00:00:00Z",
+    needs_renewal: false,
+  }),
 }));
 
 vi.mock("../api/resources", () => ({
@@ -42,6 +48,9 @@ vi.mock("../api/events", () => ({
         category: "ORGANIZATION",
         starts_on: "2026-12-01",
         ends_on: null,
+        start_time: "18:00:00",
+        end_time: null,
+        location: "EEEI Room 120",
         is_flagship: false,
         image_url: null,
         link_url: null,
@@ -75,12 +84,32 @@ const renewedMe: MeResponse = {
 };
 
 describe("DashboardPage", () => {
-  it("shows upcoming events and constitution when verified resource exists", async () => {
+  it("shows redesigned dashboard sections and dynamic content", async () => {
     vi.mocked(fetchResources).mockImplementation(async (scope) => {
       if (scope === "academic") {
         return {
-          items: [],
-          meta: { total: 0, offset: 0, limit: 50 },
+          items: [
+            {
+              id: "a1",
+              category_id: "c1",
+              division_id: null,
+              title: VERIFIED_RESOURCE_TITLES.academicDrive,
+              description: null,
+              url: "https://drive.google.com/academic",
+              resource_type: "GOOGLE_DRIVE",
+              display_order: 0,
+              is_active: true,
+              category: {
+                id: "c1",
+                scope: "ACADEMIC",
+                name: "Academic Drive",
+                description: null,
+                display_order: 0,
+                is_active: true,
+              },
+            },
+          ],
+          meta: { total: 1, offset: 0, limit: 50 },
         };
       }
       return {
@@ -121,14 +150,16 @@ describe("DashboardPage", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText("Upcoming")).toBeTruthy();
-        expect(screen.getByText("View calendar")).toBeTruthy();
-        expect(screen.getByText("Quick access")).toBeTruthy();
+        expect(screen.getByText("Where do you need to go?")).toBeTruthy();
+        expect(screen.getByText("START HERE")).toBeTruthy();
+        expect(screen.getByText("This week")).toBeTruthy();
+        expect(screen.getByText("View calendar →")).toBeTruthy();
         expect(screen.getByText("General Assembly")).toBeTruthy();
-        expect(screen.getByText(VERIFIED_RESOURCE_TITLES.constitution)).toBeTruthy();
-        expect(screen.queryByText("Explore")).toBeNull();
-        expect(screen.queryByText("Continue")).toBeNull();
-        expect(screen.queryByText(/sample/i)).toBeNull();
+        expect(screen.getByText("Circuit Constitution")).toBeTruthy();
+        expect(screen.getByText(/You're all set for this academic year/i)).toBeTruthy();
+        expect(screen.getByText("Open membership portal")).toBeTruthy();
+        expect(screen.queryByText("Upcoming")).toBeNull();
+        expect(screen.queryByText("Quick access")).toBeNull();
       },
       { timeout: 3000 },
     );

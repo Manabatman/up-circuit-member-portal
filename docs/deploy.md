@@ -42,7 +42,7 @@ This guide is for bringing the portal to **Vercel (frontend)**, **Render (backen
 | `APP_ENV` | `dev` or `production` (not `local`) |
 | `DATABASE_URL` | App role, session pooler |
 | `MIGRATOR_DATABASE_URL` | Migrator role, for Alembic |
-| `FRONTEND_ORIGIN` | Exact Vercel URL (CORS and CSRF), e.g. `https://portal.example.org` |
+| `FRONTEND_ORIGIN` | **Required.** Exact Vercel URL (no trailing slash), e.g. `https://up-circuit-member-portal.vercel.app` — app will not start without this |
 | `BREVO_API_KEY` | Required when `APP_ENV` is not `local` (login emails) |
 | `EMAIL_FROM` | Sender address for OTP emails |
 | `MAINTENANCE_TOKEN` | Optional; only if cleanup jobs are enabled later |
@@ -112,7 +112,8 @@ Checklist:
 |---------|--------|
 | Root directory | `backend/` |
 | Build command | `pip install -r requirements.txt` |
-| Pre-deploy | `alembic upgrade head` |
+| Pre-deploy command | `alembic upgrade head` (must be set; not optional) |
+| Python version | `3.12` — add `backend/runtime.txt` or set `PYTHON_VERSION=3.12.8` in Render env |
 | Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
 | Health check path | `/api/v1/health` |
 

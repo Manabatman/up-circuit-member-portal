@@ -14,6 +14,9 @@ vi.mock("../api/events", () => ({
         category: "ORGANIZATION",
         starts_on: "2026-10-15",
         ends_on: null,
+        start_time: "18:00:00",
+        end_time: null,
+        location: "EEEI Room 120",
         is_flagship: false,
         image_url: null,
         link_url: null,
@@ -27,8 +30,15 @@ vi.mock("../api/events", () => ({
   }),
 }));
 
+vi.mock("../api/resources", () => ({
+  fetchResources: vi.fn().mockResolvedValue({
+    items: [],
+    meta: { total: 0, offset: 0, limit: 50 },
+  }),
+}));
+
 describe("CalendarPage", () => {
-  it("shows events inside the month grid", async () => {
+  it("shows schedule layout, month grid, and up next panel", async () => {
     render(
       <MemoryRouter>
         <CalendarPage />
@@ -36,9 +46,16 @@ describe("CalendarPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy();
-    expect(screen.getByLabelText("Month view")).toBeTruthy();
+    expect(screen.getByText("SCHEDULE")).toBeTruthy();
+
     await waitFor(() => {
-      expect(screen.getByText("General Assembly")).toBeTruthy();
+      expect(screen.getByLabelText("Month view")).toBeTruthy();
+      expect(screen.getByText("UP NEXT")).toBeTruthy();
+      expect(screen.getAllByText("General Assembly").length).toBeGreaterThan(0);
+      expect(screen.getByText(/scheduled event/i)).toBeTruthy();
+      expect(
+        screen.getByText("Event details and RSVPs open in the official Google Calendar."),
+      ).toBeTruthy();
     });
   });
 });

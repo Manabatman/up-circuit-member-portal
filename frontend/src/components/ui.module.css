@@ -1678,9 +1678,15 @@
 /* ── Calendar ── */
 .calendarLayout {
   display: grid;
-  grid-template-columns: 1fr 20rem;
+  grid-template-columns: minmax(0, 1fr) 22rem;
   gap: var(--space-6);
   align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .calendarLayout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .calendarToolbar {
@@ -1753,12 +1759,23 @@
 }
 
 .calendarDayToday {
-  background: var(--calendar-today);
+  background: var(--surface);
 }
 
 .calendarDayNumber {
   font-size: 0.8125rem;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.625rem;
+  height: 1.625rem;
+  border-radius: var(--radius-pill);
+}
+
+.calendarDayNumberToday {
+  background: var(--bright-blue);
+  color: #fff;
 }
 
 .calendarEventDot {
@@ -2379,4 +2396,643 @@
   .tableWrap {
     display: none;
   }
+}
+
+/* ── Portal dashboard / calendar chrome ── */
+.eyebrow {
+  margin: 0 0 var(--space-2);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.portalCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-card);
+}
+
+.dashboardWelcomeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.dashboardWelcomeMain {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.dashboardWelcomeTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.dashboardWelcomeTagline {
+  margin: var(--space-2) 0 0;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.dashboardMembershipMini {
+  flex: 0 0 auto;
+  width: min(100%, 11rem);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.dashboardMembershipMiniHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dashboardMembershipMiniYear {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.dashboardSectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.dashboardSectionTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dashboardSectionHint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.quickAccessGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+@media (max-width: 1024px) {
+  .quickAccessGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .quickAccessGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.quickAccessCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  min-height: 10rem;
+  overflow: hidden;
+}
+
+.quickAccessCard::after {
+  content: "";
+  position: absolute;
+  top: -2rem;
+  right: -2rem;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  pointer-events: none;
+}
+
+.quickAccessCardLink {
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.quickAccessCardLink:hover {
+  border-color: var(--bright-blue);
+  box-shadow: 0 4px 20px rgba(12, 57, 112, 0.1);
+  text-decoration: none;
+}
+
+.quickAccessCardDisabled {
+  opacity: 0.85;
+}
+
+.quickAccessTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.quickAccessIconWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  color: var(--bright-blue);
+}
+
+.quickAccessIcon {
+  color: var(--bright-blue);
+}
+
+.quickAccessArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  background: var(--surface);
+}
+
+.quickAccessTitle {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.quickAccessDesc {
+  margin: 0;
+  flex: 1;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.quickAccessFooter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--bright-blue);
+}
+
+.quickAccessFooterMuted {
+  margin-top: var(--space-2);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.membershipPillRenewed,
+.membershipPillNotRenewed,
+.membershipPillPending {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.membershipPillRenewed {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.membershipPillNotRenewed {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.membershipPillPending {
+  background: var(--pending-bg);
+  color: var(--pending-text);
+}
+
+.membershipPillDot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.dashboardLowerGrid {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .dashboardLowerGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboardCardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.dashboardCardTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dashboardCardLink {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--bright-blue);
+  text-decoration: none;
+}
+
+.dashboardCardLink:hover {
+  text-decoration: underline;
+}
+
+.dashboardEventList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dashboardEventRow {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.dashboardEventRow:first-child {
+  padding-top: 0;
+}
+
+.dashboardEventRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.dashboardEventRowBody {
+  min-width: 0;
+  flex: 1;
+}
+
+.dashboardEventTitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dashboardEventMeta {
+  margin: var(--space-1) 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.dashboardEventTitleLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dashboardEventTitleLink:hover {
+  color: var(--bright-blue);
+  text-decoration: none;
+}
+
+.membershipInfoCardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.membershipInfoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--sidebar-bg);
+  color: var(--text-on-dark);
+}
+
+.membershipInfoHeadline {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.membershipInfoBody {
+  margin: var(--space-3) 0 var(--space-5);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.outlinedExternalBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.outlinedExternalBtn:hover {
+  border-color: var(--bright-blue);
+  color: var(--bright-blue);
+  text-decoration: none;
+}
+
+.eventDateBlockDashboard,
+.eventDateBlockAgenda {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.eventDateBlockDashboard {
+  width: 3rem;
+  padding: var(--space-2) var(--space-1);
+}
+
+.eventDateBlockAgenda {
+  width: 2.75rem;
+  padding: var(--space-2) var(--space-1);
+}
+
+.eventDateBlockDay {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.eventDateBlockSub {
+  margin-top: 0.125rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.eventCategoryTag {
+  display: inline-block;
+  margin-bottom: var(--space-1);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.eventCat_organization {
+  color: var(--event-cat-organization);
+}
+
+.eventCat_academic {
+  color: var(--event-cat-academic);
+}
+
+.eventCat_community {
+  color: var(--event-cat-community);
+}
+
+.eventCat_membership {
+  color: var(--event-cat-membership);
+}
+
+.eventCat_deadline {
+  color: var(--event-cat-deadline);
+}
+
+.eventCat_flagship {
+  color: var(--event-cat-flagship);
+}
+
+.calendarMainCard {
+  padding: var(--space-6);
+}
+
+.calendarCardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.calendarMonthTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.calendarMonthMeta {
+  margin: var(--space-1) 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.calendarEventChip {
+  display: block;
+  padding: 0.2rem 0.35rem 0.2rem 0.45rem;
+  border-radius: 4px;
+  border-left: 3px solid transparent;
+  font-size: 0.625rem;
+  line-height: 1.25;
+  text-decoration: none;
+  color: var(--text-primary);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.calendarEventChipTitle {
+  display: block;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calendarEventChipTime {
+  display: block;
+  font-size: 0.5625rem;
+  color: var(--text-secondary);
+}
+
+.calendarEventChip_organization {
+  border-left-color: var(--event-cat-organization);
+  background: var(--event-cat-organization-bg);
+}
+
+.calendarEventChip_academic {
+  border-left-color: var(--event-cat-academic);
+  background: var(--event-cat-academic-bg);
+}
+
+.calendarEventChip_community {
+  border-left-color: var(--event-cat-community);
+  background: var(--event-cat-community-bg);
+}
+
+.calendarEventChip_membership {
+  border-left-color: var(--event-cat-membership);
+  background: var(--event-cat-membership-bg);
+}
+
+.calendarEventChip_deadline {
+  border-left-color: var(--event-cat-deadline);
+  background: var(--event-cat-deadline-bg);
+}
+
+.calendarEventChip_flagship {
+  border-left-color: var(--event-cat-flagship);
+  background: var(--event-cat-flagship-bg);
+}
+
+.calendarUpNextMonth {
+  margin: var(--space-1) 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.calendarAgendaRow {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.calendarAgendaRow:first-of-type {
+  padding-top: 0;
+}
+
+.calendarAgendaRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.calendarAgendaRowBody {
+  min-width: 0;
+  flex: 1;
+}
+
+.calendarAgendaTitle {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.calendarAgendaTitleLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.calendarAgendaTitleLink:hover {
+  color: var(--bright-blue);
+}
+
+.calendarAgendaMeta {
+  margin: var(--space-1) 0 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.calendarNoticeBox {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin-top: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.calendarNoticeIcon {
+  flex-shrink: 0;
+  color: var(--bright-blue);
+  margin-top: 0.1rem;
+}
+
+.calendarDay:hover {
+  background: var(--surface-soft);
 }

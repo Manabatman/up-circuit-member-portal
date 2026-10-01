@@ -33,6 +33,9 @@ type FormState = {
   category: (typeof CATEGORIES)[number];
   starts_on: string;
   ends_on: string;
+  start_time: string;
+  end_time: string;
+  location: string;
   is_flagship: boolean;
   link_url: string;
   image_url: string;
@@ -44,6 +47,9 @@ const emptyForm = (): FormState => ({
   category: "EVENT",
   starts_on: "",
   ends_on: "",
+  start_time: "",
+  end_time: "",
+  location: "",
   is_flagship: false,
   link_url: "",
   image_url: "",
@@ -90,6 +96,9 @@ export function AdminEventsPage() {
       category: event.category as FormState["category"],
       starts_on: event.starts_on,
       ends_on: event.ends_on ?? "",
+      start_time: event.start_time?.slice(0, 5) ?? "",
+      end_time: event.end_time?.slice(0, 5) ?? "",
+      location: event.location ?? "",
       is_flagship: event.is_flagship,
       link_url: event.link_url ?? "",
       image_url: event.image_url ?? "",
@@ -107,6 +116,9 @@ export function AdminEventsPage() {
       category: form.category,
       starts_on: form.starts_on,
       ends_on: form.ends_on.trim() || null,
+      start_time: form.start_time.trim() || null,
+      end_time: form.end_time.trim() || null,
+      location: form.location.trim() || null,
       is_flagship: form.is_flagship,
       link_url: form.link_url.trim() || null,
       image_url: form.image_url.trim() || null,
@@ -227,6 +239,26 @@ export function AdminEventsPage() {
               type="date"
               value={form.ends_on}
               onChange={(e) => setForm({ ...form, ends_on: e.target.value })}
+            />
+          </FormField>
+          <FormField label="Start time (optional)">
+            <TextInput
+              type="time"
+              value={form.start_time}
+              onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+            />
+          </FormField>
+          <FormField label="End time (optional)">
+            <TextInput
+              type="time"
+              value={form.end_time}
+              onChange={(e) => setForm({ ...form, end_time: e.target.value })}
+            />
+          </FormField>
+          <FormField label="Location (optional)">
+            <TextInput
+              value={form.location}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
             />
           </FormField>
           <FormField label="Flagship event">

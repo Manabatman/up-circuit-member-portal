@@ -10,7 +10,9 @@ export type MeResponse = {
   route_keys: string[];
 };
 
-export async function login(email: string, password: string): Promise<void> {
+export type LoginResult = { verification_required: boolean };
+
+export async function login(email: string, password: string): Promise<LoginResult> {
   const response = await apiFetch("/api/v1/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
@@ -18,9 +20,20 @@ export async function login(email: string, password: string): Promise<void> {
   if (!response.ok) {
     throw await readApiError(response);
   }
-  const body = (await response.json()) as { verification_required?: boolean };
-  if (!body.verification_required) {
-    throw new Error("Login did not require verification.");
+  return (await response.json()) as LoginResult;
+}
+
+export async function registerAccount(body: {
+  email: string;
+  password: string;
+  full_name: string;
+}): Promise<void> {
+  const response = await apiFetch("/api/v1/auth/register", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    throw await readApiError(response);
   }
 }
 

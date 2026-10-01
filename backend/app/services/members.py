@@ -42,14 +42,18 @@ def list_members(
     division_id: uuid.UUID | None,
     offset: int,
     limit: int,
+    include_inactive: bool = False,
 ) -> tuple[list[tuple[User, Profile, str, Division | None]], int]:
     current_year = _current_year(db)
     stmt = (
         select(User, Profile, Division)
         .join(Profile, Profile.user_id == User.id)
         .outerjoin(Division, Division.id == Profile.primary_division_id)
-        .where(User.deleted_at.is_(None), User.is_active.is_(True))
     )
+    if include_inactive:
+        stmt = stmt.where(User.deleted_at.is_(None))
+    else:
+        stmt = stmt.where(User.deleted_at.is_(None), User.is_active.is_(True))
     if q:
         pattern = f"%{q.strip()}%"
         stmt = stmt.where(

@@ -1,19 +1,56 @@
 import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 
-import { categoryLabel, formatEventPeriod, getDemoEvent } from "../demo/calendar";
-import { EmptyState, PageShell } from "../components/ui";
+import { fetchEvent, type PortalEvent } from "../api/events";
+import { EmptyState, ExternalLink, PageShell, Spinner } from "../components/ui";
+import { formatEventPeriod } from "../utils/eventDates";
+
+function categoryLabel(category: string): string {
+  const labels: Record<string, string> = {
+    ACADEMIC: "Academic",
+    MEMBERSHIP: "Membership",
+    ORGANIZATION: "Organization",
+    EVENT: "Event",
+    DEADLINE: "Deadline",
+  };
+  return labels[category] ?? category;
+}
 
 export function EventDetailPage() {
   const { eventId } = useParams<{ eventId: string }>();
-  const event = eventId ? getDemoEvent(eventId) : undefined;
+  const [event, setEvent] = useState<PortalEvent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!event) {
+  useEffect(() => {
+    if (!eventId) return;
+    fetchEvent(eventId)
+      .then(setEvent)
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : "Could not load event.");
+      })
+      .finally(() => setLoading(false));
+  }, [eventId]);
+
+  if (loading) {
+    return (
+      <PageShell>
+        <Spinner />
+      </PageShell>
+    );
+  }
+
+  if (error || !event) {
     return (
       <PageShell>
         <EmptyState
           title="Event not found"
-          message="This event is not on the calendar."
-          action={<Link to="/calendar">Back to Calendar</Link>}
+          message={error ?? "This event is not on the calendar."}
+          action={
+            <Link to="/calendar" className="text-bright-blue">
+              Back to Calendar
+            </Link>
+          }
         />
       </PageShell>
     );
@@ -36,6 +73,22 @@ export function EventDetailPage() {
         </h1>
         <p className="mt-3 text-[0.9375rem] text-text-secondary">{formatEventPeriod(event)}</p>
       </header>
+
+      {event.description ? (
+        <p className="max-w-2xl text-text-secondary">{event.description}</p>
+      ) : null}
+
+      {event.link_url ? (
+        <p className="mt-6">
+          {event.link_url.startsWith("/") ? (
+            <Link to={event.link_url} className="font-medium text-bright-blue">
+              View details →
+            </Link>
+          ) : (
+            <ExternalLink href={event.link_url}>Open link ↗</ExternalLink>
+          )}
+        </p>
+      ) : null}
     </PageShell>
   );
 }

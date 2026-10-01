@@ -68,6 +68,7 @@ class ResourceRead(BaseModel):
     resource_type: str
     display_order: int
     is_active: bool
+    is_featured: bool = False
     created_at: datetime
     updated_at: datetime
     category: ResourceCategoryRead
@@ -81,6 +82,7 @@ class ResourceCreate(BaseModel):
     url: HttpUrl
     resource_type: ResourceType
     display_order: int = 0
+    is_featured: bool = False
 
 
 class ResourceUpdate(BaseModel):
@@ -92,6 +94,7 @@ class ResourceUpdate(BaseModel):
     resource_type: ResourceType | None = None
     display_order: int | None = None
     is_active: bool | None = None
+    is_featured: bool | None = None
 
 
 class ResourceList(BaseModel):
@@ -110,6 +113,7 @@ def to_resource_read(resource, category) -> ResourceRead:
         resource_type=resource.resource_type,
         display_order=resource.display_order,
         is_active=resource.is_active,
+        is_featured=getattr(resource, "is_featured", False),
         created_at=resource.created_at,
         updated_at=resource.updated_at,
         category=ResourceCategoryRead.model_validate(category),

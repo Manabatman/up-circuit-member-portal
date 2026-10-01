@@ -11,3 +11,7 @@ services:
         value: production
       - key: PYTHON_VERSION
         value: "3.12"
+      - key: LOGIN_OTP_REQUIRED
+        value: "false"
+      # Set in Render dashboard (secrets): DATABASE_URL, MIGRATOR_DATABASE_URL,
+      # FRONTEND_ORIGIN, BREVO_API_KEY (when LOGIN_OTP_REQUIRED=true), EMAIL_FROM

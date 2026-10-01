@@ -15,6 +15,9 @@ export type MemberAdmin = MemberDirectory & {
   email: string;
   student_number: string | null;
   contact_number: string | null;
+  roles?: string[];
+  registered_at?: string | null;
+  is_active?: boolean;
 };
 
 export type MemberSelf = {
@@ -60,6 +63,23 @@ export async function fetchOwnProfile(): Promise<MemberSelf> {
 
 export async function fetchOwnMembership(): Promise<MembershipSelf> {
   return apiJson<MembershipSelf>("/api/v1/membership/me");
+}
+
+export async function updateMemberRoles(memberId: string, roles: string[]): Promise<MemberAdmin> {
+  return apiJson<MemberAdmin>(`/api/v1/members/${memberId}/roles`, {
+    method: "PATCH",
+    body: JSON.stringify({ roles }),
+  });
+}
+
+export async function updateMemberAccount(
+  memberId: string,
+  isActive: boolean,
+): Promise<MemberAdmin> {
+  return apiJson<MemberAdmin>(`/api/v1/members/${memberId}/account`, {
+    method: "PATCH",
+    body: JSON.stringify({ is_active: isActive }),
+  });
 }
 
 export async function updateMembershipStatus(

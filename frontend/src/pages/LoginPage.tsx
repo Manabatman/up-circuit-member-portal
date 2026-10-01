@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { login, verifyCode, ApiRequestError } from "../api/auth";
 import { FIRST_TIME_RENEWAL_FORM_URL } from "../constants";
@@ -15,11 +15,14 @@ function FirstTimeRenewalPanel() {
         <strong>Existing members</strong> — sign in above with your UP Circuit email and password.
       </p>
       <p className={styles.loginOnboardingBody}>
-        <strong>New member / first-time renewal</strong> — complete the onboarding form to start
-        membership renewal. This is separate from logging in.
+        <strong>New to the portal?</strong>{" "}
+        <Link to="/register" className="font-medium text-bright-blue">
+          Create an account
+        </Link>{" "}
+        with your @up.edu.ph email.
       </p>
       <ExternalLink href={FIRST_TIME_RENEWAL_FORM_URL} className={styles.loginOnboardingCta}>
-        Get Started
+        First-time renewal form ↗
       </ExternalLink>
     </aside>
   );
@@ -27,6 +30,8 @@ function FirstTimeRenewalPanel() {
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const registerMessage = (location.state as { message?: string } | null)?.message;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -43,8 +48,12 @@ export function LoginPage() {
     }
     setLoading(true);
     try {
-      await login(email.trim(), password);
-      setStep("otp");
+      const result = await login(email.trim(), password);
+      if (result.verification_required) {
+        setStep("otp");
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (err) {
       if (err instanceof TypeError) {
         setError(
@@ -154,6 +163,11 @@ export function LoginPage() {
           </div>
         )}
 
+        {registerMessage ? (
+          <p className={styles.loginSuccess} role="status">
+            {registerMessage}
+          </p>
+        ) : null}
         {error ? <p className={styles.loginError} role="alert">{error}</p> : null}
 
         {step === "password" ? <FirstTimeRenewalPanel /> : null}

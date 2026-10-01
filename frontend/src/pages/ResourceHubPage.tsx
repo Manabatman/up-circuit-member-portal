@@ -80,10 +80,18 @@ export function ResourceHubPage({ scope, title, subtitle, kicker }: Props) {
     return resources.find((r) => r.title === VERIFIED_RESOURCE_TITLES.academicDrive) ?? null;
   }, [resources, scope]);
 
+  const featuredItems = useMemo(
+    () => resources.filter((r) => r.is_featured && r.id !== featuredAcademicDrive?.id),
+    [resources, featuredAcademicDrive],
+  );
+
   const listResources = useMemo(() => {
-    if (!featuredAcademicDrive) return resources;
-    return resources.filter((r) => r.id !== featuredAcademicDrive.id);
-  }, [resources, featuredAcademicDrive]);
+    const featuredIds = new Set([
+      ...(featuredAcademicDrive ? [featuredAcademicDrive.id] : []),
+      ...featuredItems.map((r) => r.id),
+    ]);
+    return resources.filter((r) => !featuredIds.has(r.id));
+  }, [resources, featuredAcademicDrive, featuredItems]);
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -164,16 +172,41 @@ export function ResourceHubPage({ scope, title, subtitle, kicker }: Props) {
         </div>
       ) : null}
 
-      {featuredAcademicDrive && !filter.trim() ? (
+      {scope === "academic" && featuredAcademicDrive && !filter.trim() ? (
         <section className={styles.academicDriveFeatured}>
-          <h2 className={styles.academicDriveFeaturedTitle}>Start here</h2>
+          <h2 className={styles.academicDriveFeaturedTitle}>Your central hub for academic materials</h2>
           <p className={styles.academicDriveFeaturedBody}>
-            Course materials, study guides, and other academic resources for renewed members live
-            in the official Google Drive folder.
+            The official Google Drive remains the source of truth. Use the portal to discover featured
+            materials, then open the full drive when you need everything.
           </p>
           <PrimaryExternalButton href={featuredAcademicDrive.url}>
-            Open Official Academic Drive
+            Open Full Academic Drive ↗
           </PrimaryExternalButton>
+        </section>
+      ) : null}
+
+      {scope === "academic" && featuredItems.length > 0 && !filter.trim() ? (
+        <section className={styles.featuredResourceGrid}>
+          <h2 className={styles.categoryTitle}>Featured materials</h2>
+          <ul className={styles.resourceRowList}>
+            {featuredItems.map((resource) => (
+              <ResourceRow
+                key={resource.id}
+                title={resource.title}
+                description={resource.description}
+                url={resource.url}
+                resourceType={resource.resource_type}
+                onEdit={
+                  canManage
+                    ? () => {
+                        setEditingResource(resource);
+                        setEditorOpen(true);
+                      }
+                    : undefined
+                }
+              />
+            ))}
+          </ul>
         </section>
       ) : null}
 
@@ -247,7 +280,7 @@ export function AcademicDrivePage() {
       scope="academic"
       kicker="Discover"
       title="Academic Drive"
-      subtitle="Course materials and study guides for renewed members."
+      subtitle="A curated front door to the official Academic Drive."
     />
   );
 }

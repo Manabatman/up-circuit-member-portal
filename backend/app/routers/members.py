@@ -11,14 +11,17 @@ from app.auth.deps import AuthContext, require_permission
 from app.db.session import get_db
 from app.exceptions import app_http_exception
 from app.schemas.member import (
+    MemberAccountUpdate,
     MemberAdminRead,
     MemberDirectoryRead,
     MemberList,
+    MemberRolesUpdate,
     MemberSelfRead,
     MembershipAdminRead,
     MembershipSelfRead,
     MembershipStatusUpdate,
 )
+from app.services import member_admin as member_admin_service
 from app.models.academic_year import AcademicYear
 from app.services import members as member_service
 from app.services import memberships as membership_service
@@ -45,6 +48,7 @@ def list_members(
     ctx: AuthContext = Depends(require_permission("view_member_directory")),
     db: Session = Depends(get_db),
 ) -> MemberList:
+    is_admin = "view_members_admin" in ctx.permissions
     rows, total = member_service.list_members(
         db,
         q=q,
@@ -52,8 +56,13 @@ def list_members(
         division_id=division_id,
         offset=offset,
         limit=limit,
+        include_inactive=is_admin,
     )
-    is_admin = "view_members_admin" in ctx.permissions
+    role_map = (
+        member_admin_service.load_roles_for_users(db, [user.id for user, _, _, _ in rows])
+        if is_admin
+        else {}
+    )
     items: list[MemberDirectoryRead | MemberAdminRead] = []
     for user, profile, status, division in rows:
         base = {
@@ -73,6 +82,9 @@ def list_members(
                     email=user.email,
                     student_number=profile.student_number,
                     contact_number=profile.contact_number,
+                    roles=role_map.get(user.id, []),
+                    registered_at=user.created_at,
+                    is_active=user.is_active,
                 )
             )
         else:
@@ -161,4 +173,79 @@ def update_membership_status(
         academic_year_label=year.label,
         status=term.status,
         renewed_at=term.renewed_at,
+    )
+
+
+@router.patch("/members/{member_id}/roles", response_model=MemberAdminRead)
+def update_member_roles(
+    request: Request,
+    member_id: uuid.UUID,
+    body: MemberRolesUpdate,
+    ctx: AuthContext = Depends(require_permission("manage_roles")),
+    db: Session = Depends(get_db),
+) -> MemberAdminRead:
+    roles = member_admin_service.set_member_roles(
+        db,
+        ctx=ctx,
+        member_id=member_id,
+        role_names=body.roles,
+        ip_address=_client_ip(request),
+    )
+    user, profile = member_service.get_member_or_404(db, member_id)
+    from app.services.members import _current_year, _membership_status_for_user
+
+    status = _membership_status_for_user(db, user.id, _current_year(db))
+    return MemberAdminRead(
+        user_id=user.id,
+        full_name=profile.full_name,
+        degree_program=profile.degree_program,
+        year_level=profile.year_level,
+        batch=profile.batch,
+        membership_status=status,
+        primary_division_id=profile.primary_division_id,
+        primary_division_name=None,
+        email=user.email,
+        student_number=profile.student_number,
+        contact_number=profile.contact_number,
+        roles=roles,
+        registered_at=user.created_at,
+        is_active=user.is_active,
+    )
+
+
+@router.patch("/members/{member_id}/account", response_model=MemberAdminRead)
+def update_member_account(
+    request: Request,
+    member_id: uuid.UUID,
+    body: MemberAccountUpdate,
+    ctx: AuthContext = Depends(require_permission("manage_members")),
+    db: Session = Depends(get_db),
+) -> MemberAdminRead:
+    user = member_admin_service.set_member_account_active(
+        db,
+        ctx=ctx,
+        member_id=member_id,
+        is_active=body.is_active,
+        ip_address=_client_ip(request),
+    )
+    user, profile = member_service.get_member_or_404(db, member_id)
+    from app.services.members import _current_year, _membership_status_for_user
+
+    status = _membership_status_for_user(db, user.id, _current_year(db))
+    roles = member_admin_service.load_roles_for_users(db, [user.id]).get(user.id, [])
+    return MemberAdminRead(
+        user_id=user.id,
+        full_name=profile.full_name,
+        degree_program=profile.degree_program,
+        year_level=profile.year_level,
+        batch=profile.batch,
+        membership_status=status,
+        primary_division_id=profile.primary_division_id,
+        primary_division_name=None,
+        email=user.email,
+        student_number=profile.student_number,
+        contact_number=profile.contact_number,
+        roles=roles,
+        registered_at=user.created_at,
+        is_active=user.is_active,
     )

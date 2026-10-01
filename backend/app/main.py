@@ -16,8 +16,10 @@ from app.middleware.csrf import CsrfOriginMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.routers import (
     academic_years,
+    admin,
     auth,
     divisions,
+    events,
     feedback,
     health,
     members,
@@ -64,6 +66,8 @@ def create_app() -> FastAPI:
     application.include_router(resources.router, prefix="/api/v1")
     application.include_router(divisions.router, prefix="/api/v1")
     application.include_router(members.router, prefix="/api/v1")
+    application.include_router(events.router, prefix="/api/v1")
+    application.include_router(admin.router, prefix="/api/v1")
     application.include_router(feedback.router, prefix="/api/v1")
 
     @application.exception_handler(StarletteHTTPException)

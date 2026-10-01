@@ -82,6 +82,7 @@ def _resource_snapshot(resource: Resource) -> dict:
         "resource_type": resource.resource_type,
         "display_order": resource.display_order,
         "is_active": resource.is_active,
+        "is_featured": resource.is_featured,
         "category_id": str(resource.category_id),
         "division_id": str(resource.division_id) if resource.division_id else None,
     }
@@ -230,6 +231,7 @@ def create_resource(
     resource_type: str,
     display_order: int,
     ip_address: str | None,
+    is_featured: bool = False,
 ) -> tuple[Resource, ResourceCategory]:
     category = get_category_or_404(db, category_id)
     require_resource_manage(ctx, db, category.scope)  # type: ignore[arg-type]
@@ -252,6 +254,7 @@ def create_resource(
         url=url,
         resource_type=resource_type,
         display_order=display_order,
+        is_featured=is_featured,
         created_by=ctx.user_id,
         updated_by=ctx.user_id,
     )

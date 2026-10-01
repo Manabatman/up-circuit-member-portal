@@ -34,5 +34,8 @@ export const SHOWCASE_ROUTES = {
   squeeeze: { path: "/projects/squeeeze", label: "SquEEEze", icon: "projects" as const },
 } as const;
 
+export const ADMIN_OVERVIEW_PATH = "/admin";
 export const ADMIN_MEMBERS_PATH = "/admin/members";
 export const ADMIN_DIVISIONS_PATH = "/admin/divisions";
+export const ADMIN_EVENTS_PATH = "/admin/events";
+export const ADMIN_RESOURCES_PATH = "/admin/resources";

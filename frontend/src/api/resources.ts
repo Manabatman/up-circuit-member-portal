@@ -19,6 +19,7 @@ export type Resource = {
   resource_type: string;
   display_order: number;
   is_active: boolean;
+  is_featured?: boolean;
   category: ResourceCategory;
 };
 
@@ -40,6 +41,7 @@ export type ResourceInput = {
   url: string;
   resource_type: string;
   display_order?: number;
+  is_featured?: boolean;
 };
 
 export type ResourceCategoryInput = {

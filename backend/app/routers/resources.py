@@ -166,6 +166,7 @@ def create_resource(
         resource_type=body.resource_type,
         display_order=body.display_order,
         ip_address=_client_ip(request),
+        is_featured=body.is_featured,
     )
     response.headers["Location"] = f"/api/v1/resources/{resource.id}"
     return to_resource_read(resource, category)

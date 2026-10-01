@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { logout, type MeResponse } from "../api/auth";
 import {
   ADMIN_DIVISIONS_PATH,
+  ADMIN_EVENTS_PATH,
   ADMIN_MEMBERS_PATH,
+  ADMIN_OVERVIEW_PATH,
+  ADMIN_RESOURCES_PATH,
   ROUTE_LABELS,
   SHOWCASE_ROUTES,
 } from "../constants";
@@ -196,12 +199,41 @@ export function AppLayout({ me }: Props) {
                 Administration
               </span>
               <NavLink
-                to="/admin/resources"
+                to={ADMIN_OVERVIEW_PATH}
+                end
+                className={({ isActive }) => navLinkClass(isActive)}
+                onClick={closeMobile}
+              >
+                <Icon name="dashboard" size={18} className="shrink-0" />
+                <span>Overview</span>
+              </NavLink>
+              {me.permissions.includes("manage_membership_status") ? (
+                <NavLink
+                  to={ADMIN_MEMBERS_PATH}
+                  className={({ isActive }) => navLinkClass(isActive)}
+                  onClick={closeMobile}
+                >
+                  <Icon name="directory" size={18} className="shrink-0" />
+                  <span>Members</span>
+                </NavLink>
+              ) : null}
+              {me.permissions.includes("manage_events") ? (
+                <NavLink
+                  to={ADMIN_EVENTS_PATH}
+                  className={({ isActive }) => navLinkClass(isActive)}
+                  onClick={closeMobile}
+                >
+                  <Icon name="calendar" size={18} className="shrink-0" />
+                  <span>Events</span>
+                </NavLink>
+              ) : null}
+              <NavLink
+                to={ADMIN_RESOURCES_PATH}
                 className={({ isActive }) => navLinkClass(isActive)}
                 onClick={closeMobile}
               >
                 <Icon name="admin" size={18} className="shrink-0" />
-                <span>Resources</span>
+                <span>Content</span>
               </NavLink>
               {me.permissions.includes("manage_organizational_resources") ? (
                 <NavLink
@@ -211,16 +243,6 @@ export function AppLayout({ me }: Props) {
                 >
                   <Icon name="divisions" size={18} className="shrink-0" />
                   <span>Divisions</span>
-                </NavLink>
-              ) : null}
-              {me.permissions.includes("manage_membership_status") ? (
-                <NavLink
-                  to={ADMIN_MEMBERS_PATH}
-                  className={({ isActive }) => navLinkClass(isActive)}
-                  onClick={closeMobile}
-                >
-                  <Icon name="directory" size={18} className="shrink-0" />
-                  <span>Membership</span>
                 </NavLink>
               ) : null}
             </div>

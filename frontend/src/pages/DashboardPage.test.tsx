@@ -32,6 +32,29 @@ vi.mock("../api/resources", () => ({
   fetchResources: vi.fn(),
 }));
 
+vi.mock("../api/events", () => ({
+  fetchEvents: vi.fn().mockResolvedValue({
+    items: [
+      {
+        id: "e1",
+        title: "General Assembly",
+        description: null,
+        category: "ORGANIZATION",
+        starts_on: "2026-12-01",
+        ends_on: null,
+        is_flagship: false,
+        image_url: null,
+        link_url: null,
+        display_order: 0,
+        is_active: true,
+        created_at: "",
+        updated_at: "",
+      },
+    ],
+    meta: { total: 1, offset: 0, limit: 100 },
+  }),
+}));
+
 import { fetchResources } from "../api/resources";
 
 const renewedMe: MeResponse = {
@@ -100,7 +123,8 @@ describe("DashboardPage", () => {
       () => {
         expect(screen.getByText("Upcoming")).toBeTruthy();
         expect(screen.getByText("View calendar")).toBeTruthy();
-        expect(screen.getByText("Official documents")).toBeTruthy();
+        expect(screen.getByText("Quick access")).toBeTruthy();
+        expect(screen.getByText("General Assembly")).toBeTruthy();
         expect(screen.getByText(VERIFIED_RESOURCE_TITLES.constitution)).toBeTruthy();
         expect(screen.queryByText("Explore")).toBeNull();
         expect(screen.queryByText("Continue")).toBeNull();

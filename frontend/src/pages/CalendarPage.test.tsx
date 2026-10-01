@@ -1,11 +1,34 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { CalendarPage } from "./CalendarPage";
 
+vi.mock("../api/events", () => ({
+  fetchEvents: vi.fn().mockResolvedValue({
+    items: [
+      {
+        id: "ga",
+        title: "General Assembly",
+        description: null,
+        category: "ORGANIZATION",
+        starts_on: "2026-10-15",
+        ends_on: null,
+        is_flagship: false,
+        image_url: null,
+        link_url: null,
+        display_order: 0,
+        is_active: true,
+        created_at: "",
+        updated_at: "",
+      },
+    ],
+    meta: { total: 1, offset: 0, limit: 100 },
+  }),
+}));
+
 describe("CalendarPage", () => {
-  it("shows events inside the month grid without a separate agenda", () => {
+  it("shows events inside the month grid", async () => {
     render(
       <MemoryRouter>
         <CalendarPage />
@@ -13,9 +36,9 @@ describe("CalendarPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy();
-    expect(screen.getByText(/not the official Circuit calendar/i)).toBeTruthy();
-    expect(screen.queryByText("Agenda")).toBeNull();
     expect(screen.getByLabelText("Month view")).toBeTruthy();
-    expect(screen.getAllByText("General Assembly").length).toBeGreaterThan(0);
+    await waitFor(() => {
+      expect(screen.getByText("General Assembly")).toBeTruthy();
+    });
   });
 });

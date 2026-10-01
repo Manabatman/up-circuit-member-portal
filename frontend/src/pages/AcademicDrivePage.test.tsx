@@ -62,8 +62,8 @@ describe("AcademicDrivePage", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Start here")).toBeTruthy();
-      const driveLink = screen.getByRole("link", { name: /open official academic drive/i });
+      expect(screen.getByText(/central hub for academic materials/i)).toBeTruthy();
+      const driveLink = screen.getByRole("link", { name: /open full academic drive/i });
       expect(driveLink.getAttribute("href")).toBe("https://drive.google.com/drive/folders/demo");
     });
   });

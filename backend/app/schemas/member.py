@@ -19,6 +19,17 @@ class MemberAdminRead(MemberDirectoryRead):
     email: str
     student_number: str | None
     contact_number: str | None
+    roles: list[str] = []
+    registered_at: datetime | None = None
+    is_active: bool = True
+
+
+class MemberRolesUpdate(BaseModel):
+    roles: list[str]
+
+
+class MemberAccountUpdate(BaseModel):
+    is_active: bool
 
 
 class MemberSelfRead(BaseModel):

@@ -21,13 +21,17 @@ def _utc_expires(expires_at) -> object:
     return expires_at.astimezone(UTC)
 
 
+def _cookie_samesite() -> str:
+    return settings.session_cookie_samesite
+
+
 def set_session_cookie(response: Response, token: str, expires_at) -> None:
-    secure = settings.app_env != "local"
+    secure = settings.app_env != "local" or settings.session_cookie_samesite == "none"
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=token,
         httponly=True,
-        samesite="lax",
+        samesite=_cookie_samesite(),
         secure=secure,
         path="/",
         expires=_utc_expires(expires_at),
@@ -35,11 +39,11 @@ def set_session_cookie(response: Response, token: str, expires_at) -> None:
 
 
 def clear_session_cookie(response: Response) -> None:
-    secure = settings.app_env != "local"
+    secure = settings.app_env != "local" or settings.session_cookie_samesite == "none"
     response.delete_cookie(
         key=SESSION_COOKIE_NAME,
         path="/",
         httponly=True,
-        samesite="lax",
+        samesite=_cookie_samesite(),
         secure=secure,
     )

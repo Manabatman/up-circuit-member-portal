@@ -45,6 +45,7 @@ export function ResourceEditorModal({
     url: "",
     resource_type: "GOOGLE_DRIVE" as (typeof RESOURCE_TYPES)[number],
     display_order: 0,
+    is_featured: false,
   });
 
   useEffect(() => {
@@ -61,9 +62,10 @@ export function ResourceEditorModal({
             url: resource.url,
             resource_type: resource.resource_type as (typeof RESOURCE_TYPES)[number],
             display_order: resource.display_order,
+            is_featured: resource.is_featured ?? false,
           });
         } else {
-          setForm((current) => ({ ...current, category_id: first }));
+          setForm((current) => ({ ...current, category_id: first, is_featured: false }));
         }
       })
       .catch(() => setCategories([]));
@@ -82,6 +84,7 @@ export function ResourceEditorModal({
         url: form.url,
         resource_type: form.resource_type,
         display_order: form.display_order,
+        is_featured: scope === "academic" ? form.is_featured : undefined,
       };
       if (resource) {
         await updateResource(resource.id, body);
@@ -166,6 +169,17 @@ export function ResourceEditorModal({
             ))}
           </Select>
         </FormField>
+        {scope === "academic" ? (
+          <FormField label="Featured on Academic Drive">
+            <Select
+              value={form.is_featured ? "yes" : "no"}
+              onChange={(e) => setForm((f) => ({ ...f, is_featured: e.target.value === "yes" }))}
+            >
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </Select>
+          </FormField>
+        ) : null}
         {error ? <p className="text-sm text-[var(--danger-text)]">{error}</p> : null}
       </form>
     </Modal>

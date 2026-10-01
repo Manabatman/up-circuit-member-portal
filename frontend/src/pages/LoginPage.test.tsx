@@ -39,7 +39,7 @@ describe("LoginPage", () => {
 
   it("shows first-time renewal path on the sign-in step only", async () => {
     const user = userEvent.setup({ delay: null });
-    vi.mocked(login).mockResolvedValue(undefined);
+    vi.mocked(login).mockResolvedValue({ verification_required: true });
 
     render(
       <MemoryRouter>
@@ -47,7 +47,7 @@ describe("LoginPage", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getAllByRole("link", { name: /get started/i }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: /create an account/i })).toBeTruthy();
     expect(screen.getByRole("heading", { name: /don't have a member portal account yet/i })).toBeTruthy();
 
     await user.type(screen.getByLabelText(/email/i), "member@up.edu.ph");
@@ -56,6 +56,6 @@ describe("LoginPage", () => {
 
     expect(await screen.findByRole("heading", { name: /verification code/i })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: /don't have a member portal account yet/i })).toBeNull();
-    expect(screen.queryByRole("link", { name: /get started/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /create an account/i })).toBeNull();
   });
 });

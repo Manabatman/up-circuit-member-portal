@@ -53,12 +53,19 @@ class CapturingEmailSender:
         CapturingEmailSender.last_code = code
 
 
+class NoOpEmailSender:
+    def send_login_otp(self, *, email: str, code: str) -> None:
+        _uvicorn_log.warning("[OTP disabled] login code not sent for %s", email)
+
+
 def get_email_sender() -> EmailSender:
     if settings.app_env == "local":
         return ConsoleEmailSender()
+    if not settings.login_otp_required:
+        return NoOpEmailSender()
     if not settings.brevo_api_key.strip():
         raise RuntimeError(
-            "BREVO_API_KEY is required when APP_ENV is not local. "
-            "Configure email before starting the server."
+            "BREVO_API_KEY is required when APP_ENV is not local and LOGIN_OTP_REQUIRED is true. "
+            "Configure email or set LOGIN_OTP_REQUIRED=false for password-only beta login."
         )
     return BrevoEmailSender(settings.brevo_api_key, str(settings.email_from))

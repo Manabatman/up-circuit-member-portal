@@ -20,13 +20,28 @@ class Settings(BaseSettings):
     brevo_api_key: str = ""
     email_from: EmailStr = "portal@example.org"
     maintenance_token: str = ""
+    # When false, password login creates a session immediately (beta without Brevo).
+    login_otp_required: bool = True
+    # lax for same-site; none for cross-site frontend/API hosts (Vercel + Render).
+    session_cookie_samesite: Literal["lax", "none"] = "lax"
 
     @model_validator(mode="after")
     def hosted_env_requires_email(self) -> "Settings":
-        if self.app_env in ("dev", "production") and not self.brevo_api_key.strip():
+        if (
+            self.app_env in ("dev", "production")
+            and self.login_otp_required
+            and not self.brevo_api_key.strip()
+        ):
             raise ValueError(
-                "BREVO_API_KEY must be set when APP_ENV is dev or production."
+                "BREVO_API_KEY must be set when APP_ENV is dev or production "
+                "and LOGIN_OTP_REQUIRED is true."
             )
+        return self
+
+    @model_validator(mode="after")
+    def default_samesite_for_hosted(self) -> "Settings":
+        if self.app_env != "local" and self.session_cookie_samesite == "lax":
+            object.__setattr__(self, "session_cookie_samesite", "none")
         return self
 
     def sqlalchemy_database_url(self) -> str:

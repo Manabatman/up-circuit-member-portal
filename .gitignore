@@ -28,3 +28,6 @@ Thumbs.db
 *.log
 .idea/
 *.swp
+
+# Local editor tooling (not for the repo)
+.cursor/

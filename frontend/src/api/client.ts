@@ -35,6 +35,35 @@ export class ApiRequestError extends Error {
   }
 }
 
+export class ApiNetworkError extends Error {
+  constructor(message = "Unable to reach the server.") {
+    super(message);
+    this.name = "ApiNetworkError";
+  }
+}
+
+export function describeApiError(err: unknown): string {
+  if (err instanceof ApiNetworkError) {
+    return "Unable to reach the server. Please check your connection and try again.";
+  }
+  if (err instanceof ApiRequestError) {
+    if (err.status === 401) {
+      return "Your session has expired. Please sign in again.";
+    }
+    if (err.status === 403) {
+      return "You don't have permission to perform this action.";
+    }
+    if (err.status === 500 || err.status === 503) {
+      return "Server error. Please try again later.";
+    }
+    return err.message;
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return "Something went wrong. Please try again.";
+}
+
 export async function apiFetch(
   path: string,
   init: RequestInit = {},
@@ -44,11 +73,18 @@ export async function apiFetch(
     headers.set("Content-Type", "application/json");
   }
 
-  return fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers,
-    credentials: "include",
-  });
+  try {
+    return await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers,
+      credentials: "include",
+    });
+  } catch (err) {
+    if (err instanceof TypeError) {
+      throw new ApiNetworkError();
+    }
+    throw err;
+  }
 }
 
 export async function readApiError(response: Response): Promise<ApiRequestError> {

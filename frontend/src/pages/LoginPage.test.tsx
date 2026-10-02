@@ -11,6 +11,7 @@ vi.mock("../api/auth", () => ({
 }));
 
 import { login } from "../api/auth";
+import { ApiNetworkError } from "../api/client";
 
 describe("LoginPage", () => {
   afterEach(() => {
@@ -36,6 +37,23 @@ describe("LoginPage", () => {
   },
     10000,
   );
+
+  it("shows a clear message when the API is unreachable", async () => {
+    const user = userEvent.setup({ delay: null });
+    vi.mocked(login).mockRejectedValue(new ApiNetworkError());
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+
+    await user.type(screen.getByLabelText(/email/i), "member@up.edu.ph");
+    await user.type(screen.getByLabelText(/^password$/i), "validpassword12");
+    await user.click(screen.getByRole("button", { name: /log in/i }));
+
+    expect(await screen.findByText(/Unable to reach the server/i)).toBeTruthy();
+  });
 
   it("shows first-time renewal path on the sign-in step only", async () => {
     const user = userEvent.setup({ delay: null });

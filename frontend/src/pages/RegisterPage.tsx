@@ -2,7 +2,8 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { registerAccount, ApiRequestError } from "../api/auth";
+import { registerAccount } from "../api/auth";
+import { describeApiError } from "../api/client";
 import { BrandMark, Button, FormField, TextInput } from "../components/ui";
 import styles from "../components/ui.module.css";
 
@@ -33,11 +34,7 @@ export function RegisterPage() {
         state: { message: "Account created. Sign in with your email and password." },
       });
     } catch (err) {
-      if (err instanceof ApiRequestError) {
-        setError(err.message);
-      } else {
-        setError(err instanceof Error ? err.message : "Registration failed.");
-      }
+      setError(describeApiError(err));
     } finally {
       setLoading(false);
     }

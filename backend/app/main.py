@@ -4,6 +4,9 @@ Layers in this file: HTTP wiring only — middleware, routers, error shape.
 Business rules and SQL live in services/ and models/.
 """
 
+import logging
+import traceback
+
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -15,6 +18,7 @@ from app.auth.origins import frontend_origins
 from app.config import settings
 from app.middleware.csrf import CsrfOriginMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.middleware.unhandled import UnhandledExceptionMiddleware
 from app.routers import (
     academic_years,
     admin,
@@ -48,8 +52,11 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json" if docs_enabled else None,
     )
 
-    # Required for the M0 browser slice: Vite (:5173) and FastAPI (:8000)
-    # Vite (:5173) and FastAPI (:8000) are different origins — exact allowlist, never "*".
+    # Starlette runs middleware in reverse add order. CORS must be added last so it
+    # wraps every response (including CSRF 403 and caught 500s) with Allow-Origin.
+    application.add_middleware(SecurityHeadersMiddleware)
+    application.add_middleware(CsrfOriginMiddleware)
+    application.add_middleware(UnhandledExceptionMiddleware)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=frontend_origins(),
@@ -57,9 +64,6 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type"],
     )
-
-    application.add_middleware(CsrfOriginMiddleware)
-    application.add_middleware(SecurityHeadersMiddleware)
 
     application.include_router(health.router, prefix="/api/v1")
     application.include_router(auth.router, prefix="/api/v1")
@@ -99,8 +103,12 @@ def create_app() -> FastAPI:
 
     @application.exception_handler(Exception)
     def unhandled_exception_handler(
-        _request: Request, _exc: Exception
+        _request: Request, exc: Exception
     ) -> JSONResponse:
+        logging.getLogger("uvicorn.error").error(
+            "Unhandled exception: %s", exc, exc_info=exc
+        )
+        logging.getLogger("uvicorn.error").error(traceback.format_exc())
         return JSONResponse(
             status_code=500,
             content=_envelope(500, "An unexpected error occurred."),

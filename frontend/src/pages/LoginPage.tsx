@@ -2,7 +2,8 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import { login, verifyCode, ApiRequestError } from "../api/auth";
+import { login, verifyCode } from "../api/auth";
+import { describeApiError } from "../api/client";
 import { FIRST_TIME_RENEWAL_FORM_URL } from "../constants";
 import { BrandMark, Button, ExternalLink, FormField, TextInput } from "../components/ui";
 import styles from "../components/ui.module.css";
@@ -55,17 +56,7 @@ export function LoginPage() {
         navigate("/dashboard", { replace: true });
       }
     } catch (err) {
-      if (err instanceof TypeError) {
-        setError(
-          "Could not reach the API at the configured backend URL. Run start-local.bat and use http://localhost:5173/login.",
-        );
-      } else if (err instanceof ApiRequestError && err.message === "Invalid credentials.") {
-        setError(
-          "Invalid credentials. Use DEV_SEED_PASSWORD from backend/.env exactly, then run start-local.bat to re-seed demo users.",
-        );
-      } else {
-        setError(err instanceof Error ? err.message : "Login failed.");
-      }
+      setError(describeApiError(err));
     } finally {
       setLoading(false);
     }
@@ -83,7 +74,7 @@ export function LoginPage() {
       await verifyCode(email.trim(), code);
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Verification failed.");
+      setError(describeApiError(err));
     } finally {
       setLoading(false);
     }

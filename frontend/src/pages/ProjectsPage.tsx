@@ -1,8 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { fetchEvents, type PortalEvent } from "../api/events";
-import { EmptyState, ErrorState, PageHeader, PageShell, ProjectCard, Spinner } from "../components/ui";
+import { ErrorState, PageHeader, PageShell, ProjectCard, Spinner } from "../components/ui";
+import { DEMO_PROJECTS } from "../demo/projects";
 import { formatEventPeriod } from "../utils/eventDates";
+
+export type FlagshipCard = {
+  key: string;
+  projectId: string;
+  name: string;
+  tagline: string;
+  to?: string;
+  comingSoon: boolean;
+};
+
+export function buildFlagshipCards(events: PortalEvent[]): FlagshipCard[] {
+  return DEMO_PROJECTS.map((catalog) => {
+    const event = events.find(
+      (e) => e.title.trim().toLowerCase() === catalog.name.trim().toLowerCase(),
+    );
+    const to = event?.link_url ?? catalog.path;
+    const comingSoon = event ? !event.link_url : catalog.status === "coming-soon";
+    return {
+      key: catalog.id,
+      projectId: catalog.id,
+      name: event?.title ?? catalog.name,
+      tagline:
+        event?.description ??
+        catalog.tagline ??
+        (event ? formatEventPeriod(event) : ""),
+      to: comingSoon ? undefined : to,
+      comingSoon,
+    };
+  });
+}
 
 export function ProjectsPage() {
   const [events, setEvents] = useState<PortalEvent[]>([]);
@@ -18,8 +49,9 @@ export function ProjectsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const featured = events[0];
-  const rest = events.slice(1);
+  const cards = useMemo(() => buildFlagshipCards(events), [events]);
+  const featured = cards[0];
+  const rest = cards.slice(1);
 
   return (
     <PageShell>
@@ -30,18 +62,16 @@ export function ProjectsPage() {
       />
       {loading ? <Spinner /> : null}
       {error ? <ErrorState message={error} /> : null}
-      {!loading && events.length === 0 ? (
-        <EmptyState message="No flagship events published yet." />
-      ) : null}
 
       {featured ? (
         <section className="mb-10">
           <ProjectCard
-            projectId={featured.image_url ? featured.title.toLowerCase().replace(/\s+/g, "-") : featured.id}
-            name={featured.title}
-            tagline={featured.description ?? formatEventPeriod(featured)}
-            to={featured.link_url ?? `/calendar/${featured.id}`}
+            projectId={featured.projectId}
+            name={featured.name}
+            tagline={featured.tagline}
+            to={featured.to}
             featured
+            comingSoon={featured.comingSoon}
           />
         </section>
       ) : null}
@@ -50,14 +80,14 @@ export function ProjectsPage() {
         <section>
           <h2 className="type-section-title mb-4 text-sm text-circuit-navy">More flagship events</h2>
           <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2">
-            {rest.map((event) => (
-              <li key={event.id}>
+            {rest.map((card) => (
+              <li key={card.key}>
                 <ProjectCard
-                  projectId={event.id}
-                  name={event.title}
-                  tagline={event.description ?? formatEventPeriod(event)}
-                  to={event.link_url ?? `/calendar/${event.id}`}
-                  comingSoon={!event.link_url}
+                  projectId={card.projectId}
+                  name={card.name}
+                  tagline={card.tagline}
+                  to={card.to}
+                  comingSoon={card.comingSoon}
                 />
               </li>
             ))}

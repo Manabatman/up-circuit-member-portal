@@ -10,6 +10,18 @@ vi.mock("../api/resources", () => ({
   fetchResources: vi.fn(),
 }));
 
+vi.mock("../utils/examSchedule", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../utils/examSchedule")>();
+  return {
+    ...actual,
+    upcomingExams: vi.fn().mockReturnValue([]),
+    courseCatalog: vi.fn().mockReturnValue([
+      { courseCode: "EEE 131", courseName: "Electronics I", resourceSummary: "Notes" },
+    ]),
+    examArchives: vi.fn().mockReturnValue([]),
+  };
+});
+
 import { fetchResources } from "../api/resources";
 
 describe("AcademicDrivePage", () => {
@@ -29,7 +41,7 @@ describe("AcademicDrivePage", () => {
     });
   });
 
-  it("shows a primary button for the official academic drive", async () => {
+  it("shows Open Full Academic Drive and Study Next sections", async () => {
     vi.mocked(fetchResources).mockResolvedValue({
       items: [
         {
@@ -62,46 +74,12 @@ describe("AcademicDrivePage", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/central hub for academic materials/i)).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "Study Next" })).toBeTruthy();
       const driveLink = screen.getByRole("link", { name: /open full academic drive/i });
       expect(driveLink.getAttribute("href")).toBe("https://drive.google.com/drive/folders/demo");
-    });
-  });
-
-  it("renders grouped resources", async () => {
-    vi.mocked(fetchResources).mockResolvedValue({
-      items: [
-        {
-          id: "1",
-          category_id: "c1",
-          division_id: null,
-          title: "Circuit Notes",
-          description: "Demo notes",
-          url: "https://drive.google.com/demo",
-          resource_type: "GOOGLE_DRIVE",
-          display_order: 0,
-          is_active: true,
-          category: {
-            id: "c1",
-            scope: "ACADEMIC",
-            name: "Course Materials",
-            description: null,
-            display_order: 0,
-            is_active: true,
-          },
-        },
-      ],
-      meta: { total: 1, offset: 0, limit: 50 },
-    });
-
-    render(
-      <MemoryRouter>
-        <AcademicDrivePage />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByRole("link", { name: "Circuit Notes" })).toBeTruthy();
+      expect(screen.getByText(/No upcoming exams in the next two weeks/i)).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "Browse by Course" })).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "Recently Added" })).toBeTruthy();
     });
   });
 });

@@ -22,28 +22,13 @@ vi.mock("../api/events", () => ({
         created_at: "",
         updated_at: "",
       },
-      {
-        id: "inter",
-        title: "InteraCKT",
-        description: "Coming soon",
-        category: "EVENT",
-        starts_on: "2027-01-15",
-        ends_on: null,
-        is_flagship: true,
-        image_url: null,
-        link_url: null,
-        display_order: 1,
-        is_active: true,
-        created_at: "",
-        updated_at: "",
-      },
     ],
-    meta: { total: 2, offset: 0, limit: 100 },
+    meta: { total: 1, offset: 0, limit: 100 },
   }),
 }));
 
 describe("ProjectsPage", () => {
-  it("lists flagship events from the API", async () => {
+  it("lists flagship catalog including E-Waste and InteraCKT", async () => {
     render(
       <MemoryRouter>
         <ProjectsPage />
@@ -54,6 +39,7 @@ describe("ProjectsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("SquEEEze")).toBeTruthy();
       expect(screen.getByText("InteraCKT")).toBeTruthy();
+      expect(screen.getByText("The E-Waste Project")).toBeTruthy();
     });
   });
 });

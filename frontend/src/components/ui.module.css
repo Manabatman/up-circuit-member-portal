@@ -1709,14 +1709,21 @@
   gap: var(--space-2);
 }
 
-.calendarGrid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
+.calendarBoard {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
-  background: var(--border);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
+  background: var(--border);
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  background: var(--border);
 }
 
 .calendarWeekday {
@@ -1911,12 +1918,6 @@
   border-radius: var(--radius-lg);
   background: var(--surface);
   padding: var(--space-4);
-}
-
-.calendarAgendaTitle {
-  margin: 0 0 var(--space-4);
-  font-size: 0.9375rem;
-  color: var(--circuit-blue);
 }
 
 .agendaList {
@@ -2140,26 +2141,32 @@
 }
 
 .calendarWeekBlock {
-  margin-bottom: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .calendarWeekGrid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 2px;
   background: var(--border);
 }
 
 .calendarWeekBars {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 2px;
-  margin-top: 2px;
-  min-height: 1.5rem;
+  min-height: 1.35rem;
+  min-width: 0;
 }
 
 .calendarRangeBar {
   display: block;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 0.2rem 0.4rem;
   border-radius: 4px;
   font-size: 0.625rem;
@@ -2169,6 +2176,30 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.calendarRangeBar_organization {
+  background: var(--event-cat-organization);
+}
+
+.calendarRangeBar_academic {
+  background: var(--event-cat-academic);
+}
+
+.calendarRangeBar_community {
+  background: var(--event-cat-community);
+}
+
+.calendarRangeBar_membership {
+  background: var(--event-cat-membership);
+}
+
+.calendarRangeBar_deadline {
+  background: var(--event-cat-deadline);
+}
+
+.calendarRangeBar_flagship {
+  background: var(--event-cat-flagship);
 }
 
 .calendarEventDot_membership {
@@ -2447,7 +2478,7 @@
 
 .dashboardMembershipMini {
   flex: 0 0 auto;
-  width: min(100%, 11rem);
+  width: min(100%, 13.5rem);
   padding: var(--space-4);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
@@ -2457,13 +2488,22 @@
 
 .dashboardMembershipMiniHead {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-2);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
   font-size: 0.8125rem;
   font-weight: 600;
+  line-height: 1.25;
   color: var(--text-primary);
+}
+
+.dashboardMembershipMiniHead .membershipPillRenewed,
+.dashboardMembershipMiniHead .membershipPillNotRenewed,
+.dashboardMembershipMiniHead .membershipPillPending {
+  flex-shrink: 0;
+  max-width: 100%;
+  padding: 0.25rem 0.625rem;
 }
 
 .dashboardMembershipMiniYear {
@@ -2528,16 +2568,17 @@
   overflow: hidden;
 }
 
-.quickAccessCard::after {
+.quickAccessCard::before {
   content: "";
   position: absolute;
-  top: -2rem;
-  right: -2rem;
-  width: 5rem;
-  height: 5rem;
-  border-radius: 50%;
-  background: var(--surface-soft);
+  top: 0;
+  right: 0;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0 var(--radius-lg) 0 100%;
+  background: linear-gradient(135deg, var(--surface-soft) 0%, transparent 70%);
   pointer-events: none;
+  opacity: 0.85;
 }
 
 .quickAccessCardLink {
@@ -2751,10 +2792,17 @@
 
 .membershipInfoCardHead {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
+}
+
+.membershipInfoCardHead .membershipPillRenewed,
+.membershipInfoCardHead .membershipPillNotRenewed,
+.membershipInfoCardHead .membershipPillPending {
+  flex-shrink: 0;
+  padding: 0.25rem 0.625rem;
 }
 
 .membershipInfoIcon {
@@ -2970,9 +3018,16 @@
   color: var(--text-primary);
 }
 
+.calendarUpNextList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
 .calendarAgendaRow {
   display: flex;
-  gap: var(--space-3);
+  align-items: center;
+  gap: var(--space-4);
   padding: var(--space-4) 0;
   border-bottom: 1px solid var(--border);
 }
@@ -2987,18 +3042,27 @@
 }
 
 .calendarAgendaRowBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
   min-width: 0;
   flex: 1;
 }
 
 .calendarAgendaTitle {
+  display: block;
+  width: 100%;
   margin: 0;
   font-size: 0.875rem;
   font-weight: 600;
+  line-height: 1.35;
   color: var(--text-primary);
 }
 
 .calendarAgendaTitleLink {
+  display: block;
+  width: 100%;
   color: inherit;
   text-decoration: none;
 }
@@ -3008,8 +3072,9 @@
 }
 
 .calendarAgendaMeta {
-  margin: var(--space-1) 0 0;
+  margin: 0;
   font-size: 0.75rem;
+  line-height: 1.4;
   color: var(--text-secondary);
 }
 
@@ -3035,4 +3100,703 @@
 
 .calendarDay:hover {
   background: var(--surface-soft);
+}
+
+.calendarExamChip {
+  display: block;
+  padding: 0.2rem 0.35rem 0.2rem 0.45rem;
+  border-radius: 4px;
+  border-left: 3px solid var(--event-cat-exam);
+  background: var(--event-cat-exam-bg);
+  font-size: 0.625rem;
+  line-height: 1.25;
+  color: var(--text-primary);
+  text-decoration: none;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.calendarExamChipLabel {
+  display: block;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--event-cat-exam);
+  font-size: 0.5625rem;
+}
+
+.calendarExamChipTitle {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.calendarExamChipTime {
+  display: block;
+  color: var(--text-secondary);
+}
+
+.eventCat_exam {
+  background: var(--event-cat-exam-bg);
+  color: var(--event-cat-exam);
+}
+
+.calendarExamRangeBar {
+  background: var(--event-cat-exam);
+  color: #fff;
+}
+
+.calendarExamRangeBar:hover {
+  background: #15803d;
+  color: #fff;
+  text-decoration: none;
+}
+
+.calendarExamSchedulePanel {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.calendarExamScheduleTitle {
+  margin: 0 0 var(--space-1);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.calendarExamScheduleCopy {
+  margin: 0 0 var(--space-3);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.calendarExamScheduleList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.calendarExamScheduleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+}
+
+.calendarExamScheduleRow:last-child {
+  border-bottom: none;
+}
+
+.calendarAgendaRowBody .eventCategoryTag {
+  display: block;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.calendarAgendaExamLabel {
+  display: block;
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
+
+.academicDriveStudyNext {
+  margin-bottom: var(--space-6);
+}
+
+.academicDriveStudyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--space-4);
+}
+
+.academicDriveStudyCard {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.academicDriveStudyCardBody {
+  min-width: 0;
+  flex: 1;
+}
+
+.academicDriveStudyCourse {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.academicDriveStudyTitle {
+  margin: var(--space-1) 0 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.academicDriveStudyMeta {
+  margin: var(--space-2) 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.pageHeaderActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.pageHeaderActions .primaryExternalBtn {
+  margin-top: 0;
+}
+
+.academicDriveStudyEmpty {
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.academicDriveSection {
+  margin-bottom: var(--space-8);
+}
+
+.academicDriveSectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.academicDriveFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.courseCardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 900px) {
+  .courseCardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.courseCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.courseCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.courseCardCode {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.courseCardName {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.courseCardSummary {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.recentlyAddedList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.recentlyAddedRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8125rem;
+}
+
+.recentlyAddedRow:last-child {
+  border-bottom: none;
+}
+
+.examArchivesTableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.examArchivesTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.examArchivesTable th,
+.examArchivesTable td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.examArchivesTable th {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--surface-soft);
+}
+
+.orgFolderGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .orgFolderGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.orgFolderTile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.orgFolderTile:hover {
+  border-color: var(--bright-blue);
+}
+
+.orgTileGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .orgTileGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.orgResourceTile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  text-decoration: none;
+  color: inherit;
+}
+
+.orgResourceTile:hover {
+  border-color: var(--bright-blue);
+  text-decoration: none;
+}
+
+.resourcesBreadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.resourcesBreadcrumbLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--bright-blue);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.membershipHeroCard {
+  margin-bottom: var(--space-6);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.membershipHeroCard_renewed {
+  border-color: rgba(22, 163, 74, 0.35);
+  background: linear-gradient(180deg, rgba(22, 163, 74, 0.06) 0%, var(--surface) 40%);
+}
+
+.membershipHeroCard_pending {
+  border-color: rgba(217, 119, 6, 0.35);
+}
+
+.membershipHeroCard_notRenewed {
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+.membershipHeroHeadline {
+  margin: var(--space-3) 0;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.membershipHeroDivider {
+  margin: var(--space-4) 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.membershipHeroMetaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.membershipHeroMetaLabel {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.membershipHeroMetaValue {
+  margin: var(--space-1) 0 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.membershipStatGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.membershipStatCard {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+}
+
+.membershipStatLabel {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.membershipStatValue {
+  margin: var(--space-2) 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.membershipPageHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+/* ── Mobile responsiveness (desktop unchanged above breakpoints) ── */
+
+.pageHeaderMain {
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+
+.examArchivesMobileList {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.examArchiveMobileCard {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.examArchiveMobileLabel {
+  margin: var(--space-2) 0 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.examArchiveMobileCard .examArchiveMobileLabel:first-child {
+  margin-top: 0;
+}
+
+.examArchiveMobileValue {
+  margin: var(--space-1) 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.examArchiveMobileOpen {
+  display: inline-block;
+  margin-top: var(--space-3);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-4);
+  }
+
+  .pageHeaderActions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pageHeaderActions .btn,
+  .pageHeaderActions .primaryExternalBtn,
+  .pageHeaderActions .outlinedExternalBtn {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .pageHeader .type-page-title {
+    font-size: 1.5rem;
+  }
+
+  .modalBackdrop {
+    padding: var(--space-4);
+    align-items: flex-end;
+  }
+
+  .modalDialog {
+    width: min(100%, calc(100vw - 2rem));
+    max-height: min(90dvh, 100%);
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+  }
+
+  .modalBody {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    margin-bottom: var(--space-3);
+  }
+
+  .modalFooter {
+    flex-wrap: wrap;
+    justify-content: stretch;
+  }
+
+  .modalFooter .btn {
+    flex: 1 1 auto;
+    min-height: 2.75rem;
+  }
+
+  .tableWrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .membershipHeroMetaGrid,
+  .membershipStatGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .membershipHeroCard .primaryExternalBtn {
+    width: 100%;
+  }
+
+  .membershipStatGrid + .portalCard .primaryExternalBtn {
+    width: 100%;
+  }
+
+  .dashboardWelcomeRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboardMembershipMini {
+    width: 100%;
+  }
+
+  .calendarCardHead {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .calendarNav {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .calendarDay {
+    min-height: 4.25rem;
+    padding: var(--space-1);
+  }
+
+  .calendarDayNumber {
+    font-size: 0.75rem;
+    min-width: 1.375rem;
+    height: 1.375rem;
+  }
+
+  .calendarEventChip,
+  .calendarExamChip {
+    font-size: 0.5625rem;
+    padding: 0.15rem 0.25rem;
+  }
+
+  .calendarWeekBars {
+    min-height: 1.25rem;
+  }
+
+  .calendarRangeBar {
+    font-size: 0.5625rem;
+    padding: 0.15rem 0.25rem;
+  }
+
+  .academicDriveFilters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .academicDriveFilters label {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .academicDriveFilters select {
+    width: 100%;
+  }
+
+  .recentlyAddedRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .examArchivesTableWrap {
+    display: none;
+  }
+
+  .examArchivesMobileList {
+    display: flex;
+  }
+
+  .feedbackFab {
+    right: var(--space-3);
+    bottom: max(var(--space-3), env(safe-area-inset-bottom, 0px));
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .courseCardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .orgFolderGrid,
+  .orgTileGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .quickAccessGrid {
+    grid-template-columns: 1fr;
+  }
 }

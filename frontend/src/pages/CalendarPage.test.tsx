@@ -53,8 +53,9 @@ describe("CalendarPage", () => {
       expect(screen.getByText("UP NEXT")).toBeTruthy();
       expect(screen.getAllByText("General Assembly").length).toBeGreaterThan(0);
       expect(screen.getByText(/scheduled event/i)).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "Course exam schedule" })).toBeTruthy();
       expect(
-        screen.getByText("Event details and RSVPs open in the official Google Calendar."),
+        screen.getByText(/Official EEE exam dates—other year levels may share the same course/i),
       ).toBeTruthy();
     });
   });

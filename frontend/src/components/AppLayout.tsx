@@ -54,7 +54,7 @@ function buildRouteNavItems(me: MeResponse): NavItem[] {
 
 function navLinkClass(isActive: boolean): string {
   const base =
-    "group flex items-center gap-3 rounded-md px-3 py-2 text-[0.8125rem] font-medium leading-snug transition-colors no-underline hover:no-underline";
+    "group flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-[0.8125rem] font-medium leading-snug transition-colors no-underline hover:no-underline md:min-h-0 md:py-2";
   if (isActive) {
     return `${base} border-l-2 border-cyan bg-white/[0.04] pl-[calc(0.75rem-2px)] text-cyan [&_svg]:text-cyan`;
   }
@@ -103,8 +103,13 @@ export function AppLayout({ me }: Props) {
     if (!mobileOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, [mobileOpen]);
 
@@ -140,29 +145,35 @@ export function AppLayout({ me }: Props) {
   }
 
   const sidebarClass = [
-    "fixed top-0 left-0 z-[100] flex h-screen w-[min(var(--spacing-sidebar),85vw)] flex-col",
-    "border-r border-white/[0.06] bg-[var(--sidebar-bg)] px-4 py-5",
+    "fixed left-0 z-[100] flex w-[min(var(--spacing-sidebar),85vw)] flex-col",
+    "top-14 h-[calc(100dvh-3.5rem)] border-r border-white/[0.06] bg-[var(--sidebar-bg)] px-4 py-5",
     "transition-transform duration-200 ease-out",
-    "md:sticky md:w-[var(--sidebar-width)] md:translate-x-0",
+    "md:sticky md:top-0 md:h-screen md:w-[var(--sidebar-width)] md:translate-x-0",
     mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
   ].join(" ");
 
   return (
     <div className="grid min-h-screen grid-cols-1 bg-canvas md:grid-cols-[var(--sidebar-width)_1fr]">
-      <button
-        type="button"
-        className="fixed left-3 top-3 z-[200] flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-border bg-surface p-2 text-circuit-blue md:hidden"
-        onClick={() => setMobileOpen((v) => !v)}
-        aria-label={mobileOpen ? "Close menu" : "Open menu"}
-        aria-expanded={mobileOpen}
-      >
-        <Icon name={mobileOpen ? "close" : "menu"} size={22} />
-      </button>
+      <header className="sticky top-0 z-[200] flex min-h-14 items-center justify-between gap-3 border-b border-border bg-surface px-4 md:hidden">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <BrandMark size="md" />
+          <strong className="truncate font-display text-base font-bold text-circuit-navy">UP Circuit</strong>
+        </div>
+        <button
+          type="button"
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-border bg-surface p-2 text-circuit-blue"
+          onClick={() => setMobileOpen((v) => !v)}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
+        >
+          <Icon name={mobileOpen ? "close" : "menu"} size={22} />
+        </button>
+      </header>
 
       {mobileOpen ? (
         <button
           type="button"
-          className="fixed inset-0 z-[90] border-none bg-circuit-navy/50 md:hidden"
+          className="fixed inset-0 top-14 z-[90] border-none bg-circuit-navy/50 md:hidden"
           aria-label="Close menu"
           onClick={closeMobile}
         />
@@ -273,7 +284,7 @@ export function AppLayout({ me }: Props) {
         </div>
       </aside>
 
-      <main className="min-w-0 px-4 pb-8 pt-[calc(2rem+2.5rem)] md:px-8 md:py-8">
+      <main className="min-w-0 px-4 pb-8 pt-4 md:px-8 md:py-8">
         <Outlet context={me} />
         {error ? <p className="mt-4 text-sm text-[var(--danger-text)]">{error}</p> : null}
       </main>

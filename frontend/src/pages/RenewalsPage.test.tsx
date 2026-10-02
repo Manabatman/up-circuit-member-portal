@@ -14,6 +14,12 @@ vi.mock("../api/academicYear", () => ({
   }),
 }));
 
+vi.mock("../api/members", () => ({
+  fetchOwnMembership: vi.fn(),
+}));
+
+import { fetchOwnMembership } from "../api/members";
+
 const renewedMe: MeResponse = {
   user_id: "1",
   email: "renewed.member@up.edu.ph",
@@ -34,7 +40,13 @@ describe("RenewalsPageContent", () => {
     cleanup();
   });
 
-  it("urges renewal when not renewed with primary portal button", async () => {
+  it("shows renewal hero when not renewed with portal button", async () => {
+    vi.mocked(fetchOwnMembership).mockResolvedValue({
+      academic_year_label: "2026-2027",
+      membership_status: "NOT_RENEWED",
+      renewed_at: null,
+      needs_renewal: true,
+    });
     render(
       <MemoryRouter>
         <RenewalsPageContent me={notRenewedMe} />
@@ -42,12 +54,20 @@ describe("RenewalsPageContent", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/Complete renewal on the official UP Circuit Membership Portal/i)).toBeTruthy();
-      expect(screen.getByRole("link", { name: /Open Membership Portal/i })).toBeTruthy();
+      expect(screen.getByText(/Renew your membership to keep portal access/i)).toBeTruthy();
+      expect(screen.getByRole("link", { name: /Open portal/i })).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "Membership Details" })).toBeTruthy();
     });
   });
 
-  it("shows renewed copy when already renewed", async () => {
+  it("shows renewed hero when already renewed", async () => {
+    vi.mocked(fetchOwnMembership).mockResolvedValue({
+      academic_year_label: "2026-2027",
+      membership_status: "RENEWED",
+      renewed_at: "2026-08-01T00:00:00Z",
+      needs_renewal: false,
+    });
+
     render(
       <MemoryRouter>
         <RenewalsPageContent me={renewedMe} />
@@ -56,8 +76,8 @@ describe("RenewalsPageContent", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Membership" })).toBeTruthy();
-      expect(screen.getByText(/You're renewed for AY 2026-2027/i)).toBeTruthy();
-      expect(screen.getByRole("link", { name: /Open Membership Portal/i })).toBeTruthy();
+      expect(screen.getByText(/You're renewed for this academic year/i)).toBeTruthy();
+      expect(screen.getByRole("link", { name: /Open portal/i })).toBeTruthy();
     });
   });
 });

@@ -90,8 +90,10 @@
 
   --event-cat-organization: #168fd3;
   --event-cat-organization-bg: rgba(22, 143, 211, 0.12);
-  --event-cat-academic: #1a7f4b;
-  --event-cat-academic-bg: rgba(26, 127, 75, 0.12);
+  --event-cat-academic: #6d28d9;
+  --event-cat-academic-bg: rgba(109, 40, 217, 0.12);
+  --event-cat-exam: #15803d;
+  --event-cat-exam-bg: rgba(22, 163, 74, 0.16);
   --event-cat-community: #c76a1a;
   --event-cat-community-bg: rgba(199, 106, 26, 0.12);
   --event-cat-membership: #7a5200;

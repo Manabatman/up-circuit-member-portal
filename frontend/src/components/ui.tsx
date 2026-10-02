@@ -381,8 +381,8 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
-      <div>
+    <header className={`${styles.pageHeader} mb-8 flex flex-wrap items-center justify-between gap-4`}>
+      <div className={styles.pageHeaderMain}>
         {kicker ? (
           <p className="mb-2 text-xs font-medium tracking-wide text-text-secondary">{kicker}</p>
         ) : null}
@@ -395,7 +395,9 @@ export function PageHeader({
           </p>
         ) : null}
       </div>
-      {actions ? <div className="shrink-0">{actions}</div> : null}
+      {actions ? (
+        <div className={`shrink-0 ${styles.pageHeaderActions}`}>{actions}</div>
+      ) : null}
     </header>
   );
 }

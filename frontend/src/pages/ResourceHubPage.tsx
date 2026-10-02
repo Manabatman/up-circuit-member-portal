@@ -1,47 +1,52 @@
 import { useEffect, useMemo, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useSearchParams } from "react-router-dom";
 
 import { ApiRequestError, type MeResponse } from "../api/auth";
-import {
-  fetchResourceCategories,
-  fetchResources,
-  type Resource,
-  type ResourceCategory,
-} from "../api/resources";
-import { VERIFIED_RESOURCE_TITLES } from "../constants";
+import { fetchResources, type Resource } from "../api/resources";
 import { ResourceEditorModal } from "../components/ResourceEditorModal";
+import { Icon } from "../components/Icon";
 import {
   AccessDenied,
   Button,
-  EmptyState,
   ErrorState,
   PageHeader,
   PageShell,
-  PrimaryExternalButton,
-  ResourceRow,
   SearchInput,
   Spinner,
 } from "../components/ui";
+import {
+  ORG_DOCUMENT_TILES,
+  ORG_FOLDERS,
+  ORG_REQUEST_TILES,
+  resolveOrgTileUrl,
+  type OrgFolderId,
+} from "../content/orgResourceTiles";
+import { resolvePortalLinks } from "../utils/portalLinks";
 import styles from "../components/ui.module.css";
 
-type Props = {
-  scope: "academic" | "organizational";
+const SEARCH_MIN_ITEMS = 8;
+
+function parseFolder(value: string | null): OrgFolderId | null {
+  if (value === "documents" || value === "requests") return value;
+  return null;
+}
+
+export function ResourceHubPage({
+  title,
+  subtitle,
+  kicker,
+}: {
   title: string;
   subtitle: string;
   kicker?: string;
-};
-
-const REQUESTS_CATEGORY_NAME = "Requests";
-const SEARCH_MIN_ITEMS = 8;
-
-export function ResourceHubPage({ scope, title, subtitle, kicker }: Props) {
+}) {
   const me = useOutletContext<MeResponse | null>();
-  const managePermission =
-    scope === "academic" ? "manage_academic_resources" : "manage_organizational_resources";
-  const canManage = Boolean(me?.permissions.includes(managePermission));
+  const canManage = Boolean(me?.permissions.includes("manage_organizational_resources"));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const folder = parseFolder(searchParams.get("folder"));
 
   const [resources, setResources] = useState<Resource[]>([]);
-  const [categories, setCategories] = useState<ResourceCategory[]>([]);
+  const [academicItems, setAcademicItems] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [membershipRequired, setMembershipRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,13 +58,10 @@ export function ResourceHubPage({ scope, title, subtitle, kicker }: Props) {
     setLoading(true);
     setMembershipRequired(false);
     setError(null);
-    const loadResources = fetchResources(scope);
-    const loadCategories =
-      scope === "organizational" ? fetchResourceCategories("organizational") : Promise.resolve(null);
-    return Promise.all([loadResources, loadCategories])
-      .then(([resourceData, categoryData]) => {
+    return Promise.all([fetchResources("organizational"), fetchResources("academic")])
+      .then(([resourceData, academicData]) => {
         setResources(resourceData.items);
-        setCategories(categoryData?.items ?? []);
+        setAcademicItems(academicData.items);
       })
       .catch((err: unknown) => {
         if (err instanceof ApiRequestError && err.code === "MEMBERSHIP_REQUIRED") {
@@ -73,62 +75,24 @@ export function ResourceHubPage({ scope, title, subtitle, kicker }: Props) {
 
   useEffect(() => {
     void reloadResources();
-  }, [scope]);
+  }, []);
 
-  const featuredAcademicDrive = useMemo(() => {
-    if (scope !== "academic") return null;
-    return resources.find((r) => r.title === VERIFIED_RESOURCE_TITLES.academicDrive) ?? null;
-  }, [resources, scope]);
-
-  const featuredItems = useMemo(
-    () => resources.filter((r) => r.is_featured && r.id !== featuredAcademicDrive?.id),
-    [resources, featuredAcademicDrive],
+  const academicDriveFallback = useMemo(
+    () => resolvePortalLinks(academicItems, resources).academicDrive,
+    [academicItems, resources],
   );
 
-  const listResources = useMemo(() => {
-    const featuredIds = new Set([
-      ...(featuredAcademicDrive ? [featuredAcademicDrive.id] : []),
-      ...featuredItems.map((r) => r.id),
-    ]);
-    return resources.filter((r) => !featuredIds.has(r.id));
-  }, [resources, featuredAcademicDrive, featuredItems]);
-
-  const filtered = useMemo(() => {
+  const filteredFolders = useMemo(() => {
     const q = filter.trim().toLowerCase();
-    if (!q) return listResources;
-    return listResources.filter(
-      (r) =>
-        r.title.toLowerCase().includes(q) ||
-        (r.description?.toLowerCase().includes(q) ?? false) ||
-        r.category.name.toLowerCase().includes(q),
+    if (!q) return ORG_FOLDERS;
+    return ORG_FOLDERS.filter(
+      (f) =>
+        f.label.toLowerCase().includes(q) || f.description.toLowerCase().includes(q),
     );
-  }, [listResources, filter]);
+  }, [filter]);
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, Resource[]>();
-    for (const resource of filtered) {
-      const key = resource.category.name;
-      const list = map.get(key) ?? [];
-      list.push(resource);
-      map.set(key, list);
-    }
-    return [...map.entries()].sort(
-      (a, b) =>
-        (a[1][0]?.category.display_order ?? 0) - (b[1][0]?.category.display_order ?? 0),
-    );
-  }, [filtered]);
-
-  const requestsCategory = categories.find(
-    (category) => category.name === REQUESTS_CATEGORY_NAME && category.is_active,
-  );
-  const hasRequestsResources = resources.some(
-    (resource) => resource.category.name === REQUESTS_CATEGORY_NAME,
-  );
-  const showRequestsEmpty =
-    scope === "organizational" &&
-    !filter.trim() &&
-    requestsCategory &&
-    !hasRequestsResources;
+  const folderMeta = ORG_FOLDERS.find((f) => f.id === folder);
+  const tiles = folder === "documents" ? ORG_DOCUMENT_TILES : folder === "requests" ? ORG_REQUEST_TILES : [];
 
   if (loading) {
     return (
@@ -144,15 +108,12 @@ export function ResourceHubPage({ scope, title, subtitle, kicker }: Props) {
         <PageHeader title={title} subtitle={subtitle} kicker={kicker} />
         <AccessDenied
           title="Membership renewal required"
-          message="Renew your membership to access the Academic Drive."
+          message="Renew your membership to access organizational resources."
           showRenewalLink
         />
       </PageShell>
     );
   }
-
-  const hasVisibleContent =
-    featuredAcademicDrive !== null || grouped.length > 0 || showRequestsEmpty;
 
   return (
     <PageShell>
@@ -172,101 +133,80 @@ export function ResourceHubPage({ scope, title, subtitle, kicker }: Props) {
         </div>
       ) : null}
 
-      {scope === "academic" && featuredAcademicDrive && !filter.trim() ? (
-        <section className={styles.academicDriveFeatured}>
-          <h2 className={styles.academicDriveFeaturedTitle}>Your central hub for academic materials</h2>
-          <p className={styles.academicDriveFeaturedBody}>
-            The official Google Drive remains the source of truth. Use the portal to discover featured
-            materials, then open the full drive when you need everything.
-          </p>
-          <PrimaryExternalButton href={featuredAcademicDrive.url}>
-            Open Full Academic Drive ↗
-          </PrimaryExternalButton>
-        </section>
+      {folder ? (
+        <nav className={styles.resourcesBreadcrumb} aria-label="Breadcrumb">
+          <button
+            type="button"
+            className={styles.resourcesBreadcrumbLink}
+            onClick={() => setSearchParams({})}
+          >
+            Resources
+          </button>
+          <span aria-hidden>›</span>
+          <span>{folderMeta?.label ?? folder}</span>
+        </nav>
       ) : null}
 
-      {scope === "academic" && featuredItems.length > 0 && !filter.trim() ? (
-        <section className={styles.featuredResourceGrid}>
-          <h2 className={styles.categoryTitle}>Featured materials</h2>
-          <ul className={styles.resourceRowList}>
-            {featuredItems.map((resource) => (
-              <ResourceRow
-                key={resource.id}
-                title={resource.title}
-                description={resource.description}
-                url={resource.url}
-                resourceType={resource.resource_type}
-                onEdit={
-                  canManage
-                    ? () => {
-                        setEditingResource(resource);
-                        setEditorOpen(true);
-                      }
-                    : undefined
-                }
-              />
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {resources.length >= SEARCH_MIN_ITEMS ? (
-        <SearchInput value={filter} onChange={setFilter} placeholder="Search resources…" />
+      {!folder && resources.length >= SEARCH_MIN_ITEMS ? (
+        <SearchInput value={filter} onChange={setFilter} placeholder="Search folders…" />
       ) : null}
 
       {error ? <ErrorState message={error} /> : null}
 
-      {!error && !hasVisibleContent ? (
-        <EmptyState
-          title="No resources yet"
-          message={
-            filter.trim()
-              ? "No resources matched your search."
-              : "Official Circuit resources will appear here when published by officers."
-          }
-        />
-      ) : null}
-
-      {grouped.map(([categoryName, items]) => (
-        <section key={categoryName} className={styles.categorySection}>
-          <h2 className={styles.categoryTitle}>{categoryName}</h2>
-          <ul className={styles.resourceRowList}>
-            {items.map((resource) => (
-              <ResourceRow
-                key={resource.id}
-                title={resource.title}
-                description={resource.description}
-                url={resource.url}
-                resourceType={resource.resource_type}
-                onEdit={
-                  canManage
-                    ? () => {
-                        setEditingResource(resource);
-                        setEditorOpen(true);
-                      }
-                    : undefined
-                }
-              />
-            ))}
-          </ul>
-        </section>
-      ))}
-
-      {showRequestsEmpty ? (
-        <section className={styles.categorySection}>
-          <h2 className={styles.categoryTitle}>{REQUESTS_CATEGORY_NAME}</h2>
-          <EmptyState
-            title="Request forms coming soon"
-            message="No request forms are currently available. Check back once the official forms are published."
-          />
-        </section>
-      ) : null}
+      {!folder ? (
+        <div className={styles.orgFolderGrid}>
+          {filteredFolders.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              className={styles.orgFolderTile}
+              onClick={() => setSearchParams({ folder: entry.id })}
+            >
+              <Icon name="drive" size={28} className="text-bright-blue" />
+              <h2 className="m-0 text-lg font-semibold text-circuit-navy">{entry.label}</h2>
+              <p className="m-0 text-sm text-text-secondary">{entry.description}</p>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className={styles.orgTileGrid}>
+          {tiles.map((tile) => {
+            const href = resolveOrgTileUrl(tile, resources, academicDriveFallback);
+            if (!href) {
+              return (
+                <div key={tile.title} className={styles.orgResourceTile}>
+                  <p className="m-0 font-semibold text-circuit-navy">{tile.title}</p>
+                  {tile.description ? (
+                    <p className="m-0 text-sm text-text-secondary">{tile.description}</p>
+                  ) : null}
+                  <span className="text-xs text-text-secondary">Link coming soon</span>
+                </div>
+              );
+            }
+            return (
+              <a
+                key={tile.title}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                className={styles.orgResourceTile}
+              >
+                <p className="m-0 font-semibold text-circuit-navy">{tile.title}</p>
+                {tile.description ? (
+                  <p className="m-0 text-sm text-text-secondary">{tile.description}</p>
+                ) : null}
+                <span className="text-sm font-semibold text-bright-blue">Open →</span>
+              </a>
+            );
+          })}
+        </div>
+      )}
 
       <ResourceEditorModal
         open={editorOpen}
         onClose={() => setEditorOpen(false)}
         onSaved={() => void reloadResources()}
-        scope={scope}
+        scope="organizational"
         divisionId={null}
         resource={editingResource}
       />
@@ -274,21 +214,9 @@ export function ResourceHubPage({ scope, title, subtitle, kicker }: Props) {
   );
 }
 
-export function AcademicDrivePage() {
-  return (
-    <ResourceHubPage
-      scope="academic"
-      kicker="Discover"
-      title="Academic Drive"
-      subtitle="A curated front door to the official Academic Drive."
-    />
-  );
-}
-
 export function ResourcesPage() {
   return (
     <ResourceHubPage
-      scope="organizational"
       kicker="Discover"
       title="Resources"
       subtitle="Constitution, org documents, and other Circuit links."

@@ -1,5 +1,13 @@
 import type { PortalEvent } from "../api/events";
 
+/** Calendar date in the local timezone (avoids UTC shifting the day). */
+export function localIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function eventEndDate(event: PortalEvent): string {
   return event.ends_on ?? event.starts_on;
 }
@@ -83,7 +91,7 @@ export function startOfWeekIso(reference: Date): string {
   const day = d.getDay();
   d.setDate(d.getDate() - day);
   d.setHours(12, 0, 0, 0);
-  return d.toISOString().slice(0, 10);
+  return localIsoDate(d);
 }
 
 export function endOfWeekIso(reference: Date): string {
@@ -91,7 +99,7 @@ export function endOfWeekIso(reference: Date): string {
   const day = d.getDay();
   d.setDate(d.getDate() + (6 - day));
   d.setHours(12, 0, 0, 0);
-  return d.toISOString().slice(0, 10);
+  return localIsoDate(d);
 }
 
 export function formatDashboardDateEyebrow(date: Date): string {
@@ -103,14 +111,14 @@ export function formatDashboardDateEyebrow(date: Date): string {
 export function eventOccursInMonth(event: PortalEvent, year: number, month: number): boolean {
   const monthStart = new Date(year, month, 1);
   const monthEnd = new Date(year, month + 1, 0);
-  const startIso = monthStart.toISOString().slice(0, 10);
-  const endIso = monthEnd.toISOString().slice(0, 10);
+  const startIso = localIsoDate(monthStart);
+  const endIso = localIsoDate(monthEnd);
   const eventEnd = eventEndDate(event);
   return event.starts_on <= endIso && eventEnd >= startIso;
 }
 
 export function upcomingEventsFromToday(events: PortalEvent[], limit = 8): PortalEvent[] {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localIsoDate(new Date());
   return [...events]
     .filter((e) => eventEndDate(e) >= today)
     .sort((a, b) => {

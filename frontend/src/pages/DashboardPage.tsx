@@ -23,28 +23,14 @@ import {
   formatEventRowMeta,
   upcomingEventsFromToday,
 } from "../utils/eventDates";
+import {
+  membershipExplanation,
+  membershipHeadline,
+  showMembershipPortalAction,
+} from "../utils/membershipCopy";
 import { resolvePortalLinks } from "../utils/portalLinks";
 import styles from "../components/ui.module.css";
 import { Icon } from "../components/Icon";
-
-function membershipHeadline(status: string): string {
-  const normalized = status.toUpperCase();
-  if (normalized === "RENEWED") return "You're all set for this academic year.";
-  if (normalized === "PENDING") return "Your renewal is being reviewed.";
-  return "Renew your membership for this academic year.";
-}
-
-function membershipBody(membership: MembershipSelf | null, year: AcademicYear | null): string {
-  const label = membership?.academic_year_label ?? year?.label;
-  const normalized = (membership?.membership_status ?? "").toUpperCase();
-  if (normalized === "RENEWED") {
-    return `Your membership is active for ${label ?? "the current academic year"}. Details and updates are handled in the official membership portal.`;
-  }
-  if (normalized === "PENDING") {
-    return "We'll update your portal access once your renewal is confirmed in the official membership portal.";
-  }
-  return "Complete renewal in the official membership portal to restore full member access for this academic year.";
-}
 
 export function DashboardPage() {
   const me = useOutletContext<MeResponse>();
@@ -55,6 +41,7 @@ export function DashboardPage() {
   const [orgResources, setOrgResources] = useState<Resource[]>([]);
   const [weekEvents, setWeekEvents] = useState<PortalEvent[]>([]);
   const [fallbackEvents, setFallbackEvents] = useState<PortalEvent[]>([]);
+  const [eventsStatus, setEventsStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
 
   const today = useMemo(() => new Date(), []);
@@ -78,12 +65,18 @@ export function DashboardPage() {
 
     const todayIso = new Date().toISOString().slice(0, 10);
     const weekEnd = endOfWeekIso(new Date());
-    fetchEvents({ from_date: todayIso, to_date: weekEnd })
-      .then((data) => setWeekEvents(data.items))
-      .catch(() => undefined);
-    fetchEvents({ from_date: todayIso })
-      .then((data) => setFallbackEvents(upcomingEventsFromToday(data.items, 5)))
-      .catch(() => undefined);
+    Promise.all([
+      fetchEvents({ from_date: todayIso, to_date: weekEnd }),
+      fetchEvents({ from_date: todayIso }),
+    ])
+      .then(([week, upcoming]) => {
+        setWeekEvents(week.items);
+        setFallbackEvents(upcomingEventsFromToday(upcoming.items, 5));
+        setEventsStatus("ready");
+      })
+      .catch(() => {
+        setEventsStatus("error");
+      });
   }, []);
 
   const portalLinks = useMemo(
@@ -91,7 +84,8 @@ export function DashboardPage() {
     [academicResources, orgResources],
   );
 
-  const displayEvents = weekEvents.length > 0 ? weekEvents : fallbackEvents;
+  const showingThisWeek = eventsStatus === "ready" && weekEvents.length > 0;
+  const displayEvents = showingThisWeek ? weekEvents : eventsStatus === "ready" ? fallbackEvents : [];
   const sortedEvents = useMemo(
     () =>
       [...displayEvents].sort((a, b) => {
@@ -103,8 +97,9 @@ export function DashboardPage() {
   );
 
   const membershipStatus = membership?.membership_status ?? me.membership_status;
-  const academicYearLabel =
-    membership?.academic_year_label ?? (year ? `AY ${year.label}` : null);
+  const yearLabel = membership?.academic_year_label ?? year?.label;
+  const eventsTitle =
+    eventsStatus === "ready" && weekEvents.length === 0 ? "Coming up" : eventsStatus === "ready" ? "This week" : "Events";
 
   return (
     <PageShell>
@@ -115,15 +110,6 @@ export function DashboardPage() {
           <p className={styles.dashboardWelcomeTagline}>
             Everything you need from Circuit, in one place.
           </p>
-        </div>
-        <div className={styles.dashboardMembershipMini}>
-          <div className={styles.dashboardMembershipMiniHead}>
-            <span>Membership</span>
-            <MembershipPill status={membershipStatus} />
-          </div>
-          {academicYearLabel ? (
-            <p className={styles.dashboardMembershipMiniYear}>{academicYearLabel}</p>
-          ) : null}
         </div>
       </div>
 
@@ -148,12 +134,6 @@ export function DashboardPage() {
             href={portalLinks.constitution}
             icon="doc"
           />
-          <QuickAccessCard
-            title="Division Hubs"
-            description="Files, trackers, and division workspaces"
-            href={portalLinks.divisionHubs}
-            icon="grid"
-          />
         </div>
       </section>
 
@@ -162,13 +142,19 @@ export function DashboardPage() {
           <div className={styles.dashboardCardHead}>
             <div>
               <Eyebrow>COMING UP</Eyebrow>
-              <h2 className={styles.dashboardCardTitle}>This week</h2>
+              <h2 className={styles.dashboardCardTitle}>{eventsTitle}</h2>
             </div>
             <Link to={SHOWCASE_ROUTES.calendar.path} className={styles.dashboardCardLink}>
               View calendar →
             </Link>
           </div>
-          {sortedEvents.length === 0 ? (
+          {eventsStatus === "loading" ? (
+            <p className="m-0 text-sm text-text-secondary">Loading events…</p>
+          ) : null}
+          {eventsStatus === "error" ? (
+            <ErrorState message="Events could not be loaded. The rest of this page is still available." />
+          ) : null}
+          {eventsStatus === "ready" && sortedEvents.length === 0 ? (
             <div>
               <p className="m-0 text-sm font-medium text-circuit-navy">No upcoming events</p>
               <p className="mt-1 text-sm text-text-secondary">You&apos;re all caught up for now.</p>
@@ -181,7 +167,8 @@ export function DashboardPage() {
                 </Link>
               </p>
             </div>
-          ) : (
+          ) : null}
+          {eventsStatus === "ready" && sortedEvents.length > 0 ? (
             <ul className={styles.dashboardEventList}>
               {sortedEvents.map((event) => (
                 <li key={event.id} className={styles.dashboardEventRow}>
@@ -198,7 +185,7 @@ export function DashboardPage() {
                 </li>
               ))}
             </ul>
-          )}
+          ) : null}
         </PortalCard>
 
         <PortalCard>
@@ -212,18 +199,22 @@ export function DashboardPage() {
           <h2 className={styles.membershipInfoHeadline}>
             {membershipHeadline(membershipStatus)}
           </h2>
-          <p className={styles.membershipInfoBody}>{membershipBody(membership, year)}</p>
+          <p className={styles.membershipInfoBody}>
+            {membershipExplanation(membershipStatus, yearLabel)}
+          </p>
           {membershipStatus.toUpperCase() !== "RENEWED" ? (
             <p className="mb-4 text-sm">
               <Link
                 to={RENEWALS_PATH}
                 className="font-medium text-bright-blue no-underline hover:underline"
               >
-                Renew membership for this academic year
+                View membership
               </Link>
             </p>
           ) : null}
-          <OutlinedExternalButton href={RENEWAL_URL}>Open membership portal</OutlinedExternalButton>
+          {showMembershipPortalAction(membershipStatus) ? (
+            <OutlinedExternalButton href={RENEWAL_URL}>Open membership portal</OutlinedExternalButton>
+          ) : null}
         </PortalCard>
       </div>
 

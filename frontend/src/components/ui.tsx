@@ -155,31 +155,41 @@ export function ProjectCard({
         ) : null}
         {comingSoon ? (
           <span className="text-xs font-medium text-text-secondary">Coming soon</span>
-        ) : (
-          <span className="text-sm font-medium text-bright-blue">Open project</span>
-        )}
+        ) : to ? (
+          <span className="text-sm font-medium text-bright-blue">
+            {/^https?:\/\//i.test(to) ? "Open link" : "Open project"}
+          </span>
+        ) : null}
       </div>
     </>
   );
 
-  if (featured && to && !comingSoon) {
+  const clickable = Boolean(to) && !comingSoon;
+  const featuredClass =
+    "group grid overflow-hidden rounded-xl border border-border/80 bg-surface no-underline transition-[border-color,box-shadow] hover:border-cyan/50 hover:shadow-[var(--shadow-card)] hover:no-underline md:grid-cols-[1.15fr_1fr]";
+  const cardClass = clickable
+    ? "group flex flex-col overflow-hidden rounded-xl border border-border/70 bg-surface no-underline transition-[border-color,box-shadow] hover:border-cyan/50 hover:shadow-[var(--shadow-card)] hover:no-underline"
+    : `flex flex-col overflow-hidden rounded-xl border border-border/70 bg-surface ${comingSoon ? "opacity-90" : ""}`;
+  const className = featured && clickable ? featuredClass : featured && !clickable
+    ? "grid overflow-hidden rounded-xl border border-border/80 bg-surface md:grid-cols-[1.15fr_1fr]"
+    : cardClass;
+
+  if (clickable && to) {
+    if (/^https?:\/\//i.test(to)) {
+      return (
+        <a href={to} target="_blank" rel="noreferrer" className={featured ? featuredClass : cardClass}>
+          {body}
+        </a>
+      );
+    }
     return (
-      <Link
-        to={to}
-        className="group grid overflow-hidden rounded-xl border border-border/80 bg-surface no-underline transition-[border-color,box-shadow] hover:border-cyan/50 hover:shadow-[var(--shadow-card)] hover:no-underline md:grid-cols-[1.15fr_1fr]"
-      >
+      <Link to={to} className={featured ? featuredClass : cardClass}>
         {body}
       </Link>
     );
   }
 
-  return (
-    <article
-      className={`flex flex-col overflow-hidden rounded-xl border border-border/70 bg-surface ${comingSoon ? "opacity-90" : ""}`}
-    >
-      {body}
-    </article>
-  );
+  return <article className={className}>{body}</article>;
 }
 
 export function SampleChip({ label = "Sample" }: { label?: string }) {
@@ -381,7 +391,9 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className={`${styles.pageHeader} mb-8 flex flex-wrap items-center justify-between gap-4`}>
+    <header
+      className={`${styles.pageHeader} mb-8 flex flex-wrap items-start justify-between gap-4 max-md:mb-5`}
+    >
       <div className={styles.pageHeaderMain}>
         {kicker ? (
           <p className="mb-2 text-xs font-medium tracking-wide text-text-secondary">{kicker}</p>

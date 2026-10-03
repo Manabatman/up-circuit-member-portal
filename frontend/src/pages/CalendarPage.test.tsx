@@ -32,8 +32,20 @@ vi.mock("../api/events", () => ({
 
 vi.mock("../api/resources", () => ({
   fetchResources: vi.fn().mockResolvedValue({
-    items: [],
-    meta: { total: 0, offset: 0, limit: 50 },
+    items: [
+      {
+        id: "cal",
+        title: "Official Google Calendar",
+        url: "https://calendar.google.com/example",
+        description: null,
+        category: "organizational",
+        display_order: 0,
+        is_active: true,
+        created_at: "",
+        updated_at: "",
+      },
+    ],
+    meta: { total: 1, offset: 0, limit: 50 },
   }),
 }));
 
@@ -46,17 +58,18 @@ describe("CalendarPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy();
-    expect(screen.getByText("SCHEDULE")).toBeTruthy();
+    expect(
+      screen.getByText("Assemblies, deadlines, and activities across UP Circuit."),
+    ).toBeTruthy();
+    expect(screen.queryByText("SCHEDULE")).toBeNull();
 
     await waitFor(() => {
       expect(screen.getByLabelText("Month view")).toBeTruthy();
       expect(screen.getByText("UP NEXT")).toBeTruthy();
       expect(screen.getAllByText("General Assembly").length).toBeGreaterThan(0);
       expect(screen.getByText(/scheduled event/i)).toBeTruthy();
-      expect(screen.getByRole("heading", { name: "Course exam schedule" })).toBeTruthy();
-      expect(
-        screen.getByText(/Official EEE exam dates—other year levels may share the same course/i),
-      ).toBeTruthy();
+      expect(screen.getByRole("link", { name: /Open Exams Google Calendar/i })).toBeTruthy();
+      expect(screen.queryByRole("heading", { name: "Course exam schedule" })).toBeNull();
     });
   });
 });

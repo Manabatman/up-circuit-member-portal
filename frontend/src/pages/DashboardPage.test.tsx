@@ -1,9 +1,13 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Outlet, Route, Routes } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { MeResponse } from "../api/auth";
-import { VERIFIED_RESOURCE_TITLES } from "../constants";
+import {
+  OFFICIAL_ACADEMIC_DRIVE_URL,
+  OFFICIAL_CONSTITUTION_URL,
+  VERIFIED_RESOURCE_TITLES,
+} from "../constants";
 import { DashboardPage } from "./DashboardPage";
 
 vi.mock("../api/academicYear", () => ({
@@ -65,6 +69,7 @@ vi.mock("../api/events", () => ({
 }));
 
 import { fetchResources } from "../api/resources";
+import { fetchEvents } from "../api/events";
 
 const renewedMe: MeResponse = {
   user_id: "1",
@@ -84,6 +89,37 @@ const renewedMe: MeResponse = {
 };
 
 describe("DashboardPage", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  beforeEach(() => {
+    vi.mocked(fetchResources).mockReset();
+    vi.mocked(fetchEvents).mockResolvedValue({
+      items: [
+        {
+          id: "e1",
+          title: "General Assembly",
+          description: null,
+          category: "ORGANIZATION",
+          starts_on: "2026-12-01",
+          ends_on: null,
+          start_time: "18:00:00",
+          end_time: null,
+          location: "EEEI Room 120",
+          is_flagship: false,
+          image_url: null,
+          link_url: null,
+          display_order: 0,
+          is_active: true,
+          created_at: "",
+          updated_at: "",
+        },
+      ],
+      meta: { total: 1, offset: 0, limit: 100 },
+    });
+  });
+
   it("shows redesigned dashboard sections and dynamic content", async () => {
     vi.mocked(fetchResources).mockImplementation(async (scope) => {
       if (scope === "academic") {
@@ -156,6 +192,7 @@ describe("DashboardPage", () => {
         expect(screen.getByText("View calendar →")).toBeTruthy();
         expect(screen.getByText("General Assembly")).toBeTruthy();
         expect(screen.getByText("Circuit Constitution")).toBeTruthy();
+        expect(screen.queryByText("Division Hubs")).toBeNull();
         expect(screen.getByText(/You're all set for this academic year/i)).toBeTruthy();
         expect(screen.getByText("Open membership portal")).toBeTruthy();
         expect(screen.queryByText("Upcoming")).toBeNull();
@@ -163,5 +200,54 @@ describe("DashboardPage", () => {
       },
       { timeout: 3000 },
     );
+  });
+
+  it("uses official Start Here links when resources are empty", async () => {
+    vi.mocked(fetchResources).mockResolvedValue({
+      items: [],
+      meta: { total: 0, offset: 0, limit: 50 },
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <Routes>
+          <Route element={<Outlet context={renewedMe} />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      const academic = screen.getByRole("link", { name: /Academic Drive/i });
+      const constitution = screen.getByRole("link", { name: /Circuit Constitution/i });
+      expect(academic.getAttribute("href")).toBe(OFFICIAL_ACADEMIC_DRIVE_URL);
+      expect(constitution.getAttribute("href")).toBe(OFFICIAL_CONSTITUTION_URL);
+    });
+  });
+
+  it("shows an error instead of an empty week when events fail to load", async () => {
+    vi.mocked(fetchEvents).mockRejectedValue(new Error("500 Internal Server Error"));
+    vi.mocked(fetchResources).mockResolvedValue({
+      items: [],
+      meta: { total: 0, offset: 0, limit: 50 },
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <Routes>
+          <Route element={<Outlet context={renewedMe} />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Events could not be loaded/i)).toBeTruthy();
+      expect(screen.queryByText(/No upcoming events/i)).toBeNull();
+      expect(screen.queryByText(/500/)).toBeNull();
+      expect(screen.getByText(/You're all set for this academic year/i)).toBeTruthy();
+    });
   });
 });

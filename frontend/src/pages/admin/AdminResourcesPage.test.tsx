@@ -1,8 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Outlet, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
+import type { MeResponse } from "../../api/auth";
 import { AdminResourcesPage } from "./AdminResourcesPage";
 
 vi.mock("../../api/resources", () => ({
@@ -81,9 +82,23 @@ describe("AdminResourcesPage", () => {
       },
     });
 
+    const academicAdmin: MeResponse = {
+      user_id: "1",
+      email: "academic.admin@up.edu.ph",
+      full_name: "Academic Admin",
+      membership_status: "RENEWED",
+      roles: ["ACADEMIC_ADMIN"],
+      permissions: ["view_admin_dashboard", "manage_academic_resources"],
+      route_keys: ["admin"],
+    };
+
     render(
-      <MemoryRouter>
-        <AdminResourcesPage />
+      <MemoryRouter initialEntries={["/admin/resources"]}>
+        <Routes>
+          <Route element={<Outlet context={academicAdmin} />}>
+            <Route path="/admin/resources" element={<AdminResourcesPage />} />
+          </Route>
+        </Routes>
       </MemoryRouter>,
     );
 

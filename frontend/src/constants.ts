@@ -7,6 +7,13 @@ export const FIRST_TIME_RENEWAL_FORM_URL =
 
 export const RENEWALS_PATH = "/renewals";
 
+/** Official Google Drive URLs when no matching active resource exists in the DB. */
+export const OFFICIAL_ACADEMIC_DRIVE_URL =
+  "https://drive.google.com/drive/folders/1p0YfBR_USHSX7M_XKCb8lxv-fOqC5pN8?usp=drive_link";
+
+export const OFFICIAL_CONSTITUTION_URL =
+  "https://drive.google.com/file/d/0BwpnmRTN35zQQTBQVHNudnk4TnM/view?usp=drive_link&resourcekey=0-odb6pGr4b4hkefdfJO4Fxw";
+
 /** Resource titles used for dashboard Start Here (must match Admin rows). */
 export const VERIFIED_RESOURCE_TITLES = {
   academicDrive: "Official Academic Drive",
@@ -25,7 +32,7 @@ export const ROUTE_LABELS: Record<string, { path: string; label: string; icon: s
   divisions: { path: "/divisions", label: "Divisions", icon: "divisions" },
   member_directory: { path: "/directory", label: "Members", icon: "directory" },
   account: { path: "/account", label: "My Account", icon: "account" },
-  renew_membership: { path: RENEWALS_PATH, label: "Renew Membership", icon: "renew" },
+  renew_membership: { path: RENEWALS_PATH, label: "Membership", icon: "renew" },
   admin: { path: "/admin/resources", label: "Admin", icon: "admin" },
 };
 

@@ -39,6 +39,13 @@ export function examDisplayLabel(exam: ScheduledCourseExam): string {
   return `${exam.courseCode} · ${exam.examName}`;
 }
 
+/** Single-line label for calendar day chips (course, exam name, optional time). */
+export function formatExamCalendarChip(exam: ScheduledCourseExam): string {
+  const timeLabel = formatExamTimeRange(exam.startTime, exam.endTime);
+  const base = examDisplayLabel(exam);
+  return timeLabel ? `${base} · ${timeLabel}` : base;
+}
+
 export function formatExamDateRange(exam: ScheduledCourseExam): string {
   if (!isMultiDayExam(exam)) {
     return formatExamDateShort(exam.date);

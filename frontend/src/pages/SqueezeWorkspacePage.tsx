@@ -1,14 +1,38 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 
+import { SQUEEEZE29_QUESTIONS, SQUEEEZE29_QUESTION_SHEET_URL } from "../content/squeeeze29";
 import { SQUEEEZE_DEMO } from "../demo/squeeeze";
-import { EmptyState, PageShell, ResourceRow, SectionHeader } from "../components/ui";
+import {
+  EmptyState,
+  PageShell,
+  PrimaryExternalButton,
+  SearchInput,
+  SectionHeader,
+} from "../components/ui";
 import styles from "../components/ui.module.css";
 
-type Tab = "overview" | "resources" | "timeline" | "people";
-
 export function SqueezeWorkspacePage() {
-  const [tab, setTab] = useState<Tab>("overview");
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("All");
+
+  const categories = useMemo(() => {
+    const names = new Set(SQUEEEZE29_QUESTIONS.map((item) => item.category).filter(Boolean));
+    return ["All", ...[...names].sort()];
+  }, []);
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return SQUEEEZE29_QUESTIONS.filter((item) => {
+      if (category !== "All" && item.category !== category) return false;
+      if (!q) return true;
+      return (
+        item.question.toLowerCase().includes(q) ||
+        item.answer.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q)
+      );
+    });
+  }, [category, query]);
 
   return (
     <PageShell>
@@ -22,100 +46,62 @@ export function SqueezeWorkspacePage() {
         <p className={styles.workspaceLead}>{SQUEEEZE_DEMO.overview}</p>
       </header>
 
-      <nav className={styles.workspaceTabs} aria-label="Workspace sections">
-        {(
-          [
-            ["overview", "Overview"],
-            ["resources", "Resources"],
-            ["timeline", "Timeline"],
-            ["people", "People"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            className={tab === id ? styles.workspaceTabActive : styles.workspaceTab}
-            onClick={() => setTab(id)}
-            aria-current={tab === id ? "page" : undefined}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      <section>
+        <SectionHeader
+          title="SquEEEze 29 questions"
+          subtitle="Questions and answers for this edition."
+        />
+        <PrimaryExternalButton href={SQUEEEZE29_QUESTION_SHEET_URL}>
+          Open question sheet
+        </PrimaryExternalButton>
 
-      {tab === "overview" ? (
-        <section>
-          <SectionHeader title="What's happening" />
-          <div className={styles.infoPanel}>
-            <p className={styles.infoPanelLabel}>Project status</p>
-            <p className={styles.infoPanelValue}>{SQUEEEZE_DEMO.statusNote}</p>
+        {SQUEEEZE29_QUESTIONS.length === 0 ? (
+          <div className="mt-6">
+            <EmptyState message="The question list is in the shared sheet. Open it to review questions and answers." />
           </div>
-          <div className={styles.infoPanel}>
-            <p className={styles.infoPanelLabel}>Upcoming milestone</p>
-            <p className={styles.infoPanelValue}>{SQUEEEZE_DEMO.upcomingNote}</p>
-          </div>
-          <SectionHeader
-            title="Your resources"
-            subtitle="Quick links to external tools."
-          />
-          <ul className={styles.resourceRowList}>
-            {SQUEEEZE_DEMO.resourceGroups[0].items.slice(0, 3).map((item) => (
-              <ResourceRow
-                key={item.title}
-                title={item.title}
-                description={item.description}
-                url={item.url}
-                resourceType={item.resourceType}
+        ) : (
+          <div className="mt-6">
+            <div className={styles.academicDriveFilters}>
+              <SearchInput
+                value={query}
+                onChange={setQuery}
+                placeholder="Search questions or answers…"
               />
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {tab === "resources" ? (
-        <section>
-          <SectionHeader
-            title="Resources"
-            subtitle="Grouped by purpose. Each link opens an external system."
-          />
-          {SQUEEEZE_DEMO.resourceGroups.map((group) => (
-            <div key={group.name} className={styles.categorySection}>
-              <h2 className={styles.categoryTitle}>{group.name}</h2>
-              <ul className={styles.resourceRowList}>
-                {group.items.map((item) => (
-                  <ResourceRow
-                    key={item.title}
-                    title={item.title}
-                    description={item.description}
-                    url={item.url}
-                    resourceType={item.resourceType}
-                  />
+              {categories.length > 2 ? (
+                <label className="flex items-center gap-2 text-sm text-text-secondary">
+                  Category
+                  <select
+                    className="rounded-md border border-border px-2 py-1.5 text-sm"
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value)}
+                  >
+                    {categories.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+            </div>
+            {visible.length === 0 ? (
+              <EmptyState message="No questions matched your search." />
+            ) : (
+              <ul className={styles.recentlyAddedList}>
+                {visible.map((item) => (
+                  <li key={item.id} className="border-b border-border px-4 py-3 last:border-b-0">
+                    {item.category ? (
+                      <p className="m-0 text-xs font-medium text-text-secondary">{item.category}</p>
+                    ) : null}
+                    <p className="m-0 mt-1 font-semibold text-circuit-navy">{item.question}</p>
+                    <p className="m-0 mt-1 text-sm text-text-secondary">{item.answer}</p>
+                  </li>
                 ))}
               </ul>
-            </div>
-          ))}
-        </section>
-      ) : null}
-
-      {tab === "timeline" ? (
-        <section>
-          <SectionHeader title="Timeline" />
-          <ul className={styles.eventDetailList}>
-            {SQUEEEZE_DEMO.milestones.map((m) => (
-              <li key={m.label}>
-                <strong>{m.label}:</strong> {m.note}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {tab === "people" ? (
-        <section>
-          <SectionHeader title="People" />
-          <EmptyState message="Team listings are not in the portal yet." />
-        </section>
-      ) : null}
+            )}
+          </div>
+        )}
+      </section>
     </PageShell>
   );
 }

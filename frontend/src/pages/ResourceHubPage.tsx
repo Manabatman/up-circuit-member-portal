@@ -21,7 +21,6 @@ import {
   resolveOrgTileUrl,
   type OrgFolderId,
 } from "../content/orgResourceTiles";
-import { resolvePortalLinks } from "../utils/portalLinks";
 import styles from "../components/ui.module.css";
 
 const SEARCH_MIN_ITEMS = 8;
@@ -46,7 +45,6 @@ export function ResourceHubPage({
   const folder = parseFolder(searchParams.get("folder"));
 
   const [resources, setResources] = useState<Resource[]>([]);
-  const [academicItems, setAcademicItems] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [membershipRequired, setMembershipRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,10 +56,9 @@ export function ResourceHubPage({
     setLoading(true);
     setMembershipRequired(false);
     setError(null);
-    return Promise.all([fetchResources("organizational"), fetchResources("academic")])
-      .then(([resourceData, academicData]) => {
+    return fetchResources("organizational")
+      .then((resourceData) => {
         setResources(resourceData.items);
-        setAcademicItems(academicData.items);
       })
       .catch((err: unknown) => {
         if (err instanceof ApiRequestError && err.code === "MEMBERSHIP_REQUIRED") {
@@ -76,11 +73,6 @@ export function ResourceHubPage({
   useEffect(() => {
     void reloadResources();
   }, []);
-
-  const academicDriveFallback = useMemo(
-    () => resolvePortalLinks(academicItems, resources).academicDrive,
-    [academicItems, resources],
-  );
 
   const filteredFolders = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -171,7 +163,7 @@ export function ResourceHubPage({
       ) : (
         <div className={styles.orgTileGrid}>
           {tiles.map((tile) => {
-            const href = resolveOrgTileUrl(tile, resources, academicDriveFallback);
+            const href = resolveOrgTileUrl(tile, resources);
             if (!href) {
               return (
                 <div key={tile.title} className={styles.orgResourceTile}>

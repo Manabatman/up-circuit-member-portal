@@ -54,9 +54,9 @@ describe("RenewalsPageContent", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/Renew your membership to keep portal access/i)).toBeTruthy();
-      expect(screen.getByRole("link", { name: /Open portal/i })).toBeTruthy();
-      expect(screen.getByRole("heading", { name: "Membership Details" })).toBeTruthy();
+      expect(screen.getByText(/Renew your membership for this academic year/i)).toBeTruthy();
+      expect(screen.getAllByRole("link", { name: /Open membership portal/i })).toHaveLength(1);
+      expect(screen.queryByRole("heading", { name: "Membership Details" })).toBeNull();
     });
   });
 
@@ -76,8 +76,8 @@ describe("RenewalsPageContent", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Membership" })).toBeTruthy();
-      expect(screen.getByText(/You're renewed for this academic year/i)).toBeTruthy();
-      expect(screen.getByRole("link", { name: /Open portal/i })).toBeTruthy();
+      expect(screen.getByText(/You're all set for this academic year/i)).toBeTruthy();
+      expect(screen.getAllByRole("link", { name: /Open membership portal/i })).toHaveLength(1);
     });
   });
 });

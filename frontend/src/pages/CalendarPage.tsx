@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 
+import { describeApiError } from "../api/client";
 import { fetchEvents, type PortalEvent } from "../api/events";
 import { fetchResources } from "../api/resources";
 import { Icon } from "../components/Icon";
@@ -10,7 +11,6 @@ import {
   ErrorState,
   EventCategoryTag,
   EventDateBlock,
-  Eyebrow,
   OutlinedExternalButton,
   PageHeader,
   PageShell,
@@ -31,11 +31,10 @@ import {
   allScheduledExams,
   examDisplayLabel,
   examEndDate,
+  formatExamCalendarChip,
   examOverlapsRange,
   examStableKey,
   formatExamAgendaMeta,
-  formatExamDateRange,
-  formatExamTimeRange,
   mergeUpcomingAgenda,
   multiDayExams,
   resolveExamUrl,
@@ -94,7 +93,7 @@ export function CalendarPage() {
     fetchEvents()
       .then((data) => setEvents(data.items))
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "Could not load events.");
+        setError(describeApiError(err));
       })
       .finally(() => setLoading(false));
     Promise.all([fetchResources("organizational"), fetchResources("academic")])
@@ -173,15 +172,14 @@ export function CalendarPage() {
   const showCalendar = !loading && !error;
 
   return (
-    <PageShell>
+    <PageShell className={styles.calendarPage}>
       <PageHeader
-        kicker="SCHEDULE"
         title="Calendar"
-        subtitle="Assemblies, deadlines, and activities across Circuit."
+        subtitle="Assemblies, deadlines, and activities across UP Circuit."
         actions={
           googleCalendarUrl ? (
             <OutlinedExternalButton href={googleCalendarUrl} className="!w-auto">
-              Open Google Calendar
+              Open Exams Google Calendar
             </OutlinedExternalButton>
           ) : null
         }
@@ -291,17 +289,7 @@ export function CalendarPage() {
                             })}
                             {dayExams.slice(0, examSlots).map((exam) => {
                               const href = resolveExamUrl(exam, academicDriveUrl);
-                              const timeLabel = formatExamTimeRange(exam.startTime, exam.endTime);
-                              const label = examDisplayLabel(exam);
-                              const chip = (
-                                <>
-                                  <span className={styles.calendarExamChipLabel}>EXAM</span>
-                                  <span className={styles.calendarExamChipTitle}>{label}</span>
-                                  {timeLabel ? (
-                                    <span className={styles.calendarExamChipTime}>{timeLabel}</span>
-                                  ) : null}
-                                </>
-                              );
+                              const chipLabel = formatExamCalendarChip(exam);
                               return href ? (
                                 <a
                                   key={examStableKey(exam)}
@@ -309,17 +297,17 @@ export function CalendarPage() {
                                   target="_blank"
                                   rel="noreferrer"
                                   className={styles.calendarExamChip}
-                                  title={label}
+                                  title={chipLabel}
                                 >
-                                  {chip}
+                                  <span className={styles.calendarExamChipLine}>{chipLabel}</span>
                                 </a>
                               ) : (
                                 <span
                                   key={examStableKey(exam)}
                                   className={styles.calendarExamChip}
-                                  title={label}
+                                  title={chipLabel}
                                 >
-                                  {chip}
+                                  <span className={styles.calendarExamChipLine}>{chipLabel}</span>
                                 </span>
                               );
                             })}
@@ -368,7 +356,7 @@ export function CalendarPage() {
                         const startCol = week.findIndex((c) => c?.iso === segStart);
                         const endCol = week.findIndex((c) => c?.iso === segEnd);
                         if (startCol < 0 || endCol < 0) return null;
-                        const label = examDisplayLabel(exam);
+                        const barLabel = formatExamCalendarChip(exam);
                         const href = resolveExamUrl(exam, academicDriveUrl);
                         const barClass = `${styles.calendarRangeBar} ${styles.calendarExamRangeBar}`;
                         const gridStyle = { gridColumn: `${startCol + 1} / ${endCol + 2}` };
@@ -380,18 +368,18 @@ export function CalendarPage() {
                             rel="noreferrer"
                             className={`${barClass} no-underline hover:no-underline`}
                             style={gridStyle}
-                            title={label}
+                            title={barLabel}
                           >
-                            {label}
+                            {barLabel}
                           </a>
                         ) : (
                           <span
                             key={`${examStableKey(exam)}-${weekIdx}`}
                             className={barClass}
                             style={gridStyle}
-                            title={label}
+                            title={barLabel}
                           >
-                            {label}
+                            {barLabel}
                           </span>
                         );
                       })}
@@ -403,8 +391,8 @@ export function CalendarPage() {
             </div>
           </PortalCard>
 
-          <PortalCard>
-            <Eyebrow>UP NEXT</Eyebrow>
+          <PortalCard className={styles.calendarUpNextCard}>
+            <p className={styles.calendarUpNextEyebrow}>UP NEXT</p>
             <p className={styles.calendarUpNextMonth}>{upNextMonthLabel}</p>
             {upNext.length === 0 ? (
               <div>
@@ -444,32 +432,6 @@ export function CalendarPage() {
                 )}
               </ul>
             )}
-            <div className={styles.calendarExamSchedulePanel}>
-              <h3 className={styles.calendarExamScheduleTitle}>Course exam schedule</h3>
-              <p className={styles.calendarExamScheduleCopy}>
-                Official EEE exam dates—other year levels may share the same course.
-              </p>
-              <ul className={styles.calendarExamScheduleList}>
-                {examSchedule.map((exam) => {
-                  const href = resolveExamUrl(exam, academicDriveUrl);
-                  const timeLabel = formatExamTimeRange(exam.startTime, exam.endTime);
-                  const dateLabel = formatExamDateRange(exam);
-                  return (
-                    <li key={examStableKey(exam)} className={styles.calendarExamScheduleRow}>
-                      <span>
-                        {examDisplayLabel(exam)} · {dateLabel}
-                        {timeLabel ? ` · ${timeLabel}` : ""}
-                      </span>
-                      {href ? (
-                        <a href={href} target="_blank" rel="noreferrer" className="text-sm font-semibold">
-                          Open →
-                        </a>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
           </PortalCard>
         </div>
       ) : null}

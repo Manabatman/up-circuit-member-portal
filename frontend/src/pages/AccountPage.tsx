@@ -98,7 +98,7 @@ export function AccountPage() {
         </dl>
         {membership.needs_renewal ? (
           <p className={styles.renewalLinkWrap}>
-            <Link to={RENEWALS_PATH}>Renew membership for this academic year</Link>
+            <Link to={RENEWALS_PATH}>View membership</Link>
           </p>
         ) : null}
       </section>

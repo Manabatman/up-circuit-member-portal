@@ -1,7 +1,9 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 
 import { fetchDivisions, type Division } from "../../api/divisions";
+import type { MeResponse } from "../../api/auth";
 import {
   createResource,
   createResourceCategory,
@@ -14,6 +16,7 @@ import {
   type ResourceCategory,
 } from "../../api/resources";
 import {
+  AccessDenied,
   Button,
   Card,
   EmptyState,
@@ -37,13 +40,31 @@ const RESOURCE_TYPES = [
   "EXTERNAL_LINK",
 ] as const;
 
+type ResourceScope = "academic" | "organizational";
+
 const SCOPE_API = {
   academic: "ACADEMIC" as const,
   organizational: "ORGANIZATIONAL" as const,
 };
 
+const SCOPE_PERMISSION: Record<ResourceScope, string> = {
+  academic: "manage_academic_resources",
+  organizational: "manage_organizational_resources",
+};
+
 export function AdminResourcesPage() {
-  const [scope, setScope] = useState<"academic" | "organizational">("academic");
+  const me = useOutletContext<MeResponse | null>();
+  const canAcademic = Boolean(me?.permissions.includes(SCOPE_PERMISSION.academic));
+  const canOrganizational = Boolean(me?.permissions.includes(SCOPE_PERMISSION.organizational));
+  const scopeOptions = (
+    [
+      canAcademic ? { value: "academic" as const, label: "Academic" } : null,
+      canOrganizational ? { value: "organizational" as const, label: "Organizational" } : null,
+    ] as const
+  ).filter((option): option is { value: ResourceScope; label: string } => option !== null);
+  const [scope, setScope] = useState<ResourceScope>(
+    canOrganizational && !canAcademic ? "organizational" : "academic",
+  );
   const [resources, setResources] = useState<Resource[]>([]);
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
   const [divisions, setDivisions] = useState<Division[]>([]);
@@ -96,8 +117,14 @@ export function AdminResourcesPage() {
   }
 
   useEffect(() => {
+    if (!canAcademic && !canOrganizational) {
+      setLoading(false);
+      return;
+    }
+    if (scope === "academic" && !canAcademic) return;
+    if (scope === "organizational" && !canOrganizational) return;
     void loadData(scope);
-  }, [scope]);
+  }, [scope, canAcademic, canOrganizational]);
 
   function resetForm() {
     setEditingId(null);
@@ -222,21 +249,31 @@ export function AdminResourcesPage() {
     }
   }
 
+  if (!canAcademic && !canOrganizational) {
+    return (
+      <Card>
+        <AccessDenied
+          title="Access denied"
+          message="You do not have access to this admin section."
+        />
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <PageHeader
         title="Admin — Resources"
         subtitle="Manage categories and resource links shown to members without redeploying the app."
         actions={
-          <SegmentedControl
-            value={scope}
-            options={[
-              { value: "academic", label: "Academic" },
-              { value: "organizational", label: "Organizational" },
-            ]}
-            onChange={setScope}
-            ariaLabel="Resource scope"
-          />
+          scopeOptions.length > 1 ? (
+            <SegmentedControl
+              value={scope}
+              options={scopeOptions}
+              onChange={setScope}
+              ariaLabel="Resource scope"
+            />
+          ) : undefined
         }
       />
 

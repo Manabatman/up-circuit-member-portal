@@ -13,7 +13,7 @@ function FirstTimeRenewalPanel() {
     <aside className={styles.loginOnboarding} aria-label="First-time renewal">
       <h3 className={styles.loginOnboardingTitle}>Don&apos;t have a Member Portal account yet?</h3>
       <p className={styles.loginOnboardingBody}>
-        <strong>Existing members</strong> — sign in above with your UP Circuit email and password.
+        <strong>Existing members</strong> — sign in above with your UP email and password.
       </p>
       <p className={styles.loginOnboardingBody}>
         <strong>New to the portal?</strong>{" "}
@@ -66,7 +66,7 @@ export function LoginPage() {
     event.preventDefault();
     setError(null);
     if (!/^\d{6}$/.test(code)) {
-      setError("Enter the 6-digit code from the backend console.");
+      setError("Enter the 6-digit code from your UP email.");
       return;
     }
     setLoading(true);
@@ -93,8 +93,8 @@ export function LoginPage() {
           <>
             <h2 className={styles.loginHeading}>Sign in</h2>
             <p className={styles.loginHelper}>
-              Use your UP Circuit email and password. You will receive a one-time verification code
-              after signing in.
+              Use your UP email and password. If a verification code is required, it is sent to
+              that email.
             </p>
             <form className={styles.loginForm} onSubmit={onPasswordSubmit}>
               <FormField label="Email">
@@ -129,7 +129,7 @@ export function LoginPage() {
           <div className={styles.otpPanel}>
             <h2 className={styles.loginHeading}>Verification code</h2>
             <p className={styles.loginHelper}>
-              Check the backend console for your one-time code.
+              Check your UP email for a 6-digit code. It expires in 10 minutes.
             </p>
             <form className={styles.loginForm} onSubmit={onOtpSubmit}>
               <FormField label="Verification code">

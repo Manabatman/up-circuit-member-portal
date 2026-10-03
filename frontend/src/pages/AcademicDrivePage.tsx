@@ -5,7 +5,6 @@ import { ApiRequestError, type MeResponse } from "../api/auth";
 import { fetchResources, type Resource } from "../api/resources";
 import { VERIFIED_RESOURCE_TITLES } from "../constants";
 import { ResourceEditorModal } from "../components/ResourceEditorModal";
-import { Icon } from "../components/Icon";
 import {
   AccessDenied,
   Button,
@@ -14,6 +13,7 @@ import {
   Eyebrow,
   PageHeader,
   PageShell,
+  PortalCard,
   EventDateBlock,
   PrimaryExternalButton,
   SearchInput,
@@ -26,6 +26,7 @@ import {
   formatExamDateShort,
   formatExamTimeRange,
   resolveArchiveUrl,
+  resolveExamUrl,
   upcomingExams,
 } from "../utils/examSchedule";
 import styles from "../components/ui.module.css";
@@ -146,55 +147,75 @@ export function AcademicDrivePage() {
         title="Academic Drive"
         subtitle="A curated front door to the official Academic Drive."
         actions={
-          <>
-            {canManage ? (
-              <Button
-                type="button"
-                onClick={() => {
-                  setEditingResource(null);
-                  setEditorOpen(true);
-                }}
-              >
-                + Add resource
-              </Button>
-            ) : null}
-            {academicDriveUrl ? (
-              <PrimaryExternalButton href={academicDriveUrl}>
-                Open Full Academic Drive
-              </PrimaryExternalButton>
-            ) : null}
-          </>
+          canManage ? (
+            <Button
+              type="button"
+              onClick={() => {
+                setEditingResource(null);
+                setEditorOpen(true);
+              }}
+            >
+              + Add resource
+            </Button>
+          ) : undefined
         }
       />
 
       {error ? <ErrorState message={error} /> : null}
 
+      <section className={styles.academicDriveFeatured} aria-label="Official Academic Drive">
+        <h2 className={styles.academicDriveFeaturedTitle}>Official Academic Google Drive</h2>
+        <p className={styles.academicDriveFeaturedBody}>
+          Course reviewers, samplex, and shared materials live in the official drive. Open it
+          directly when you need the full folder tree.
+        </p>
+        <PrimaryExternalButton href={academicDriveUrl}>Open Full Academic Drive</PrimaryExternalButton>
+      </section>
+
       <section className={`${styles.academicDriveSection} ${styles.academicDriveStudyNext}`}>
         <Eyebrow>CURRENT PRIORITIES</Eyebrow>
         <h2 className={styles.dashboardSectionTitle}>Study Next</h2>
-        {studyNext.length === 0 ? (
-          <div className={styles.academicDriveStudyEmpty}>
-            No upcoming exams in the next two weeks. Check Browse by Course for materials.
-          </div>
-        ) : (
-          <div className={styles.academicDriveStudyGrid}>
-            {studyNext.map((exam) => (
-              <article
-                key={`${exam.courseCode}-${exam.date}-${exam.examName}`}
-                className={styles.academicDriveStudyCard}
-              >
-                <EventDateBlock isoDate={exam.date} variant="agenda" />
-                <div className={styles.academicDriveStudyCardBody}>
-                  <p className={styles.academicDriveStudyCourse}>{exam.courseCode}</p>
-                  <p className={styles.academicDriveStudyTitle}>{exam.examName}</p>
-                  <p className={styles.academicDriveStudyMeta}>
-                    {formatExamTimeRange(exam.startTime, exam.endTime)}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+        <PortalCard className={styles.academicDriveStudyPanel}>
+          {studyNext.length === 0 ? (
+            <p className={styles.academicDriveStudyEmpty}>
+              No upcoming exams in the next two weeks. Check Browse by Course for materials.
+            </p>
+          ) : (
+            <ul className={styles.academicDriveStudyList}>
+              {studyNext.map((exam) => {
+                const timeLabel = formatExamTimeRange(exam.startTime, exam.endTime);
+                const dateLabel = formatExamDateShort(exam.date);
+                const href = resolveExamUrl(exam, academicDriveUrl);
+                const metaParts = [dateLabel, timeLabel].filter(Boolean);
+                return (
+                  <li
+                    key={`${exam.courseCode}-${exam.date}-${exam.examName}`}
+                    className={styles.academicDriveStudyRow}
+                  >
+                    <EventDateBlock isoDate={exam.date} variant="agenda" />
+                    <div className={styles.academicDriveStudyRowBody}>
+                      <p className={styles.academicDriveStudyCourse}>{exam.courseCode}</p>
+                      <p className={styles.academicDriveStudyTitle}>{exam.examName}</p>
+                      {metaParts.length > 0 ? (
+                        <p className={styles.academicDriveStudyMeta}>{metaParts.join(" · ")}</p>
+                      ) : null}
+                    </div>
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.academicDriveStudyLink}
+                      >
+                        Materials
+                      </a>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </PortalCard>
       </section>
 
       <section className={styles.academicDriveSection}>
@@ -204,6 +225,9 @@ export function AcademicDrivePage() {
             <h2 className={styles.dashboardSectionTitle}>Browse by Course</h2>
           </div>
         </div>
+        <p className="mb-4 text-sm text-text-secondary">
+          Course list for reference. Materials are in the official Academic Drive above.
+        </p>
         <div className={styles.academicDriveFilters}>
           <SearchInput
             value={search}
@@ -228,33 +252,17 @@ export function AcademicDrivePage() {
         {filteredCatalog.length === 0 ? (
           <EmptyState message="No courses matched your filters." />
         ) : (
-          <div className={styles.courseCardGrid}>
+          <ul className={styles.recentlyAddedList}>
             {filteredCatalog.map((entry) => (
-              <article key={entry.courseCode} className={styles.courseCard}>
-                <div className={styles.courseCardTop}>
-                  <Icon name="drive" size={22} className="text-bright-blue" />
-                  {canManage ? (
-                    <button
-                      type="button"
-                      className="border-0 bg-transparent p-1 text-text-secondary"
-                      aria-label={`Manage ${entry.courseCode}`}
-                      onClick={() => {
-                        setEditingResource(null);
-                        setEditorOpen(true);
-                      }}
-                    >
-                      <Icon name="menu" size={18} />
-                    </button>
-                  ) : null}
-                </div>
-                <p className={styles.courseCardCode}>{entry.courseCode}</p>
-                <p className={styles.courseCardName}>{entry.courseName}</p>
-                {entry.resourceSummary ? (
-                  <p className={styles.courseCardSummary}>{entry.resourceSummary}</p>
-                ) : null}
-              </article>
+              <li key={entry.courseCode} className={styles.recentlyAddedRow}>
+                <p className="m-0 font-semibold text-circuit-navy">{entry.courseCode}</p>
+                <p className="m-0 text-sm text-text-secondary">
+                  {entry.courseName}
+                  {entry.resourceSummary ? ` · ${entry.resourceSummary}` : ""}
+                </p>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
 

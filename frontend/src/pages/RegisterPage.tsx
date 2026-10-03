@@ -50,8 +50,9 @@ export function RegisterPage() {
         </div>
         <h2 className={styles.loginHeading}>Register</h2>
         <p className={styles.loginHelper}>
-          Use your <strong>@up.edu.ph</strong> email. Your membership starts as{" "}
-          <strong>pending</strong> until an officer approves you.
+          Use your <strong>@up.edu.ph</strong> email. Your account stays{" "}
+          <strong>pending</strong> until an officer approves it. Approval is separate from
+          renewing membership.
         </p>
         <form className={styles.loginForm} onSubmit={onSubmit}>
           <FormField label="Full name">

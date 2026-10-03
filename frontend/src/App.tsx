@@ -44,7 +44,15 @@ export default function App() {
           <Route path="/renewals" element={<RenewalsPage />} />
           <Route element={<RequirePermission permission="view_admin_dashboard" />}>
             <Route path="/admin" element={<AdminOverviewPage />} />
-            <Route path="/admin/resources" element={<AdminResourcesPage />} />
+            <Route
+              element={
+                <RequirePermission
+                  anyOf={["manage_academic_resources", "manage_organizational_resources"]}
+                />
+              }
+            >
+              <Route path="/admin/resources" element={<AdminResourcesPage />} />
+            </Route>
             <Route element={<RequirePermission permission="manage_events" />}>
               <Route path="/admin/events" element={<AdminEventsPage />} />
             </Route>

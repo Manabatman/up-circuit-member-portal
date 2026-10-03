@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { fetchEvent, type PortalEvent } from "../api/events";
 import { EmptyState, ExternalLink, PageShell, Spinner } from "../components/ui";
-import { formatEventPeriod } from "../utils/eventDates";
+import { formatEventPeriod, formatTimeOfDay } from "../utils/eventDates";
 
 function categoryLabel(category: string): string {
   const labels: Record<string, string> = {
@@ -45,7 +45,7 @@ export function EventDetailPage() {
       <PageShell>
         <EmptyState
           title="Event not found"
-          message={error ?? "This event is not on the calendar."}
+          message={error ? "This event could not be loaded." : "This event is not on the calendar."}
           action={
             <Link to="/calendar" className="text-bright-blue">
               Back to Calendar
@@ -55,6 +55,12 @@ export function EventDetailPage() {
       </PageShell>
     );
   }
+
+  const startLabel = formatTimeOfDay(event.start_time);
+  const endLabel = formatTimeOfDay(event.end_time);
+  const timeLabel =
+    startLabel && endLabel ? `${startLabel} – ${endLabel}` : (startLabel ?? endLabel);
+  const location = event.location?.trim() || null;
 
   return (
     <PageShell>
@@ -72,6 +78,12 @@ export function EventDetailPage() {
           {event.title}
         </h1>
         <p className="mt-3 text-[0.9375rem] text-text-secondary">{formatEventPeriod(event)}</p>
+        {timeLabel ? (
+          <p className="mt-1 text-[0.9375rem] text-text-secondary">Time: {timeLabel}</p>
+        ) : null}
+        {location ? (
+          <p className="mt-1 text-[0.9375rem] text-text-secondary">Location: {location}</p>
+        ) : null}
       </header>
 
       {event.description ? (

@@ -1,7 +1,10 @@
 /**
  * Organizational Resources folder tiles.
- * URLs resolve at runtime: match active DB resource by exact title, else Official Academic Drive.
+ * A tile is a link only when an active database row matches, or the tile has its own fallback URL.
  */
+
+import type { Resource } from "../api/resources";
+import { OFFICIAL_CONSTITUTION_URL } from "../constants";
 
 export type OrgFolderId = "documents" | "requests";
 
@@ -10,6 +13,8 @@ export type OrgResourceTile = {
   /** Match against Resource.title when present in DB */
   resourceTitle?: string;
   description?: string;
+  /** Used when no active DB resource matches (not Academic Drive fallback). */
+  fallbackUrl?: string;
 };
 
 export const ORG_FOLDERS: { id: OrgFolderId; label: string; description: string }[] = [
@@ -30,6 +35,7 @@ export const ORG_DOCUMENT_TILES: OrgResourceTile[] = [
     title: "Circuit Constitution",
     resourceTitle: "UP Circuit Constitution",
     description: "The organization's governing document",
+    fallbackUrl: OFFICIAL_CONSTITUTION_URL,
   },
   {
     title: "Code of Discipline",
@@ -45,16 +51,12 @@ export const ORG_DOCUMENT_TILES: OrgResourceTile[] = [
   },
 ];
 
-import type { Resource } from "../api/resources";
-
-export function resolveOrgTileUrl(
-  tile: OrgResourceTile,
-  resources: Resource[],
-  academicDriveFallback: string | null,
-): string | null {
+export function resolveOrgTileUrl(tile: OrgResourceTile, resources: Resource[]): string | null {
   const matchTitle = tile.resourceTitle ?? tile.title;
   const row = resources.find((r) => r.title === matchTitle && r.is_active);
-  return row?.url ?? academicDriveFallback;
+  if (row?.url) return row.url;
+  if (tile.fallbackUrl) return tile.fallbackUrl;
+  return null;
 }
 
 export const ORG_REQUEST_TILES: OrgResourceTile[] = [

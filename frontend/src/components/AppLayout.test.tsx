@@ -57,7 +57,7 @@ describe("AppLayout", () => {
     });
   });
 
-  it("shows Renew Membership when route key is present", async () => {
+  it("shows Membership when route key is present", async () => {
     render(
       <MemoryRouter initialEntries={["/dashboard"]}>
         <Routes>
@@ -67,7 +67,7 @@ describe("AppLayout", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getAllByText("Renew Membership").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Membership").length).toBeGreaterThan(0);
     });
   });
 

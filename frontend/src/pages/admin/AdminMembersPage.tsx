@@ -1,7 +1,9 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 
 import { fetchCurrentAcademicYear } from "../../api/academicYear";
+import type { MeResponse } from "../../api/auth";
 import {
   fetchMembers,
   updateMemberAccount,
@@ -38,6 +40,8 @@ const ROLE_OPTIONS = [
 ];
 
 export function AdminMembersPage() {
+  const me = useOutletContext<MeResponse | null>();
+  const canManageRoles = Boolean(me?.permissions.includes("manage_roles"));
   const [members, setMembers] = useState<MemberAdmin[]>([]);
   const [query, setQuery] = useState("");
   const [yearLabel, setYearLabel] = useState("");
@@ -72,6 +76,16 @@ export function AdminMembersPage() {
   useEffect(() => {
     void loadMembers(query || undefined);
   }, [query]);
+
+  function openStatus(member: MemberAdmin) {
+    setStatusModal(member);
+    setStatus(member.membership_status);
+  }
+
+  function openRoles(member: MemberAdmin) {
+    setRolesModal(member);
+    setRolesDraft(member.roles?.length ? member.roles : ["MEMBER"]);
+  }
 
   async function approveMember(member: MemberAdmin) {
     setError(null);
@@ -186,23 +200,19 @@ export function AdminMembersPage() {
                         <Button
                           type="button"
                           variant="secondary"
-                          onClick={() => {
-                            setStatusModal(member);
-                            setStatus(member.membership_status);
-                          }}
+                          onClick={() => openStatus(member)}
                         >
                           Status
                         </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={() => {
-                            setRolesModal(member);
-                            setRolesDraft(member.roles?.length ? member.roles : ["MEMBER"]);
-                          }}
-                        >
-                          Roles
-                        </Button>
+                        {canManageRoles ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => openRoles(member)}
+                          >
+                            Roles
+                          </Button>
+                        ) : null}
                         <Button type="button" variant="danger" onClick={() => setDeactivateModal(member)}>
                           Deactivate
                         </Button>
@@ -225,9 +235,14 @@ export function AdminMembersPage() {
                         Approve
                       </Button>
                     ) : null}
-                    <Button type="button" variant="secondary" onClick={() => setStatusModal(member)}>
+                    <Button type="button" variant="secondary" onClick={() => openStatus(member)}>
                       Status
                     </Button>
+                    {canManageRoles ? (
+                      <Button type="button" variant="secondary" onClick={() => openRoles(member)}>
+                        Roles
+                      </Button>
+                    ) : null}
                   </div>
                 </article>
               ))}
@@ -259,7 +274,7 @@ export function AdminMembersPage() {
         ) : null}
       </Modal>
 
-      <Modal open={rolesModal !== null} title="Change roles" onClose={() => setRolesModal(null)}>
+      <Modal open={canManageRoles && rolesModal !== null} title="Change roles" onClose={() => setRolesModal(null)}>
         {rolesModal ? (
           <form className={styles.formGrid} onSubmit={onRolesSubmit}>
             <FormField label="Roles (comma-separated)">

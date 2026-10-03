@@ -1,9 +1,9 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ApiRequestError } from "../api/auth";
-import { VERIFIED_RESOURCE_TITLES } from "../constants";
+import { OFFICIAL_ACADEMIC_DRIVE_URL, VERIFIED_RESOURCE_TITLES } from "../constants";
 import { AcademicDrivePage } from "./AcademicDrivePage";
 
 vi.mock("../api/resources", () => ({
@@ -25,6 +25,10 @@ vi.mock("../utils/examSchedule", async (importOriginal) => {
 import { fetchResources } from "../api/resources";
 
 describe("AcademicDrivePage", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("shows membership required state", async () => {
     vi.mocked(fetchResources).mockRejectedValue(
       new ApiRequestError("Membership renewal required.", 403, "MEMBERSHIP_REQUIRED"),
@@ -74,12 +78,35 @@ describe("AcademicDrivePage", () => {
     );
 
     await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Official Academic Google Drive" })).toBeTruthy();
       expect(screen.getByRole("heading", { name: "Study Next" })).toBeTruthy();
-      const driveLink = screen.getByRole("link", { name: /open full academic drive/i });
+      const featured = screen.getByLabelText("Official Academic Drive");
+      const driveLink = within(featured).getByRole("link", { name: /open full academic drive/i });
       expect(driveLink.getAttribute("href")).toBe("https://drive.google.com/drive/folders/demo");
       expect(screen.getByText(/No upcoming exams in the next two weeks/i)).toBeTruthy();
       expect(screen.getByRole("heading", { name: "Browse by Course" })).toBeTruthy();
+      expect(screen.getAllByText("EEE 131").length).toBeGreaterThan(0);
+      expect(screen.queryByRole("link", { name: /EEE 131/i })).toBeNull();
       expect(screen.getByRole("heading", { name: "Recently Added" })).toBeTruthy();
+    });
+  });
+
+  it("shows featured drive CTA with official URL when resources are empty", async () => {
+    vi.mocked(fetchResources).mockResolvedValue({
+      items: [],
+      meta: { total: 0, offset: 0, limit: 50 },
+    });
+
+    render(
+      <MemoryRouter>
+        <AcademicDrivePage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      const featured = screen.getByLabelText("Official Academic Drive");
+      const driveLink = within(featured).getByRole("link", { name: /open full academic drive/i });
+      expect(driveLink.getAttribute("href")).toBe(OFFICIAL_ACADEMIC_DRIVE_URL);
     });
   });
 });

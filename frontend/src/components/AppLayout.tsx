@@ -147,14 +147,14 @@ export function AppLayout({ me }: Props) {
   const sidebarClass = [
     "fixed left-0 z-[100] flex w-[min(var(--spacing-sidebar),85vw)] flex-col",
     "top-14 h-[calc(100dvh-3.5rem)] border-r border-white/[0.06] bg-[var(--sidebar-bg)] px-4 py-5",
-    "transition-transform duration-200 ease-out",
-    "md:sticky md:top-0 md:h-screen md:w-[var(--sidebar-width)] md:translate-x-0",
-    mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+    "transition-transform duration-200 ease-out max-md:overflow-hidden",
+    "md:sticky md:top-0 md:h-screen md:w-[var(--sidebar-width)] md:translate-x-0 md:overflow-visible",
+    mobileOpen ? "translate-x-0 max-md:pointer-events-auto" : "-translate-x-full max-md:pointer-events-none md:translate-x-0",
   ].join(" ");
 
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-canvas md:grid-cols-[var(--sidebar-width)_1fr]">
-      <header className="sticky top-0 z-[200] flex min-h-14 items-center justify-between gap-3 border-b border-border bg-surface px-4 md:hidden">
+    <div className="flex min-h-screen flex-col bg-canvas md:grid md:min-h-screen md:grid-cols-[var(--sidebar-width)_1fr]">
+      <header className="sticky top-0 z-[200] flex h-14 max-h-14 min-h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4 md:hidden">
         <div className="flex min-w-0 items-center gap-2.5">
           <BrandMark size="md" />
           <strong className="truncate font-display text-base font-bold text-circuit-navy">UP Circuit</strong>
@@ -238,14 +238,17 @@ export function AppLayout({ me }: Props) {
                   <span>Events</span>
                 </NavLink>
               ) : null}
-              <NavLink
-                to={ADMIN_RESOURCES_PATH}
-                className={({ isActive }) => navLinkClass(isActive)}
-                onClick={closeMobile}
-              >
-                <Icon name="admin" size={18} className="shrink-0" />
-                <span>Content</span>
-              </NavLink>
+              {me.permissions.includes("manage_academic_resources") ||
+              me.permissions.includes("manage_organizational_resources") ? (
+                <NavLink
+                  to={ADMIN_RESOURCES_PATH}
+                  className={({ isActive }) => navLinkClass(isActive)}
+                  onClick={closeMobile}
+                >
+                  <Icon name="admin" size={18} className="shrink-0" />
+                  <span>Content</span>
+                </NavLink>
+              ) : null}
               {me.permissions.includes("manage_organizational_resources") ? (
                 <NavLink
                   to={ADMIN_DIVISIONS_PATH}
@@ -284,7 +287,7 @@ export function AppLayout({ me }: Props) {
         </div>
       </aside>
 
-      <main className="min-w-0 px-4 pb-8 pt-4 md:px-8 md:py-8">
+      <main className="min-w-0 flex-1 overflow-x-clip px-4 pb-8 pt-4 md:col-start-2 md:px-8 md:py-8">
         <Outlet context={me} />
         {error ? <p className="mt-4 text-sm text-[var(--danger-text)]">{error}</p> : null}
       </main>

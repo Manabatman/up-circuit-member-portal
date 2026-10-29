@@ -42,7 +42,7 @@ This guide is for bringing the portal to **Vercel (frontend)**, **Render (backen
 | `APP_ENV` | `dev` or `production` (not `local`) |
 | `DATABASE_URL` | **Runtime only:** PostgreSQL user **`circuit_app`**, Supabase **session pooler** (port **5432**). Use the pooler host ending in `.supabase.com` and the tenant username form `circuit_app.<project-ref>` if shown in Supabase. |
 | `MIGRATOR_DATABASE_URL` | **Alembic pre-deploy only:** user **`circuit_migrator`**, same pooler host/port/database. Do **not** swap these two URLs. |
-| `PYTHON_VERSION` | `3.12.8` (Render reads `backend/.python-version` or this env var; `runtime.txt` alone is not enough) |
+| `PYTHON_VERSION` | `3.12.16` (Render reads `backend/.python-version` or this env var; `runtime.txt` alone is not enough) |
 | `FRONTEND_ORIGIN` | **Required.** Exact Vercel URL (no trailing slash), e.g. `https://up-circuit-member-portal.vercel.app` — app will not start without this |
 | `BREVO_API_KEY` | Required when `APP_ENV` is not `local` (login emails) |
 | `EMAIL_FROM` | Sender address for OTP emails |
@@ -135,7 +135,7 @@ Checklist:
 | Root directory | `backend/` |
 | Build command | `pip install -r requirements.txt` |
 | Pre-deploy command | `alembic upgrade head` (must be set; not optional) |
-| Python version | Set `PYTHON_VERSION=3.12.8` or use committed `backend/.python-version` |
+| Python version | Set `PYTHON_VERSION=3.12.16` or use committed `backend/.python-version` |
 | Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
 | Health check path | `/api/v1/health` |
 

@@ -1,6 +1,6 @@
 /**
- * Demo calendar content for the member portal UI.
- * Not an official Circuit schedule.
+ * Demo calendar fixtures for tests and visual helpers only.
+ * CalendarPage uses the live events API — do not render DEMO_CALENDAR_EVENTS as member schedule data.
  */
 
 export type CalendarEventCategory = "academic" | "org" | "project";

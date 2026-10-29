@@ -67,3 +67,22 @@ export const ORG_REQUEST_TILES: OrgResourceTile[] = [
   { title: "Finance Request", description: "Reimbursements and org finances" },
   { title: "Venue Request", description: "Reserve rooms and venues" },
 ];
+
+const ALL_ORG_TILES = [...ORG_DOCUMENT_TILES, ...ORG_REQUEST_TILES];
+
+/** Active API rows already represented by a folder tile (by title match). */
+export function orgResourceIdsMatchedByTiles(resources: Resource[]): Set<string> {
+  const matched = new Set<string>();
+  for (const tile of ALL_ORG_TILES) {
+    const matchTitle = tile.resourceTitle ?? tile.title;
+    const row = resources.find((r) => r.title === matchTitle && r.is_active);
+    if (row) matched.add(row.id);
+  }
+  return matched;
+}
+
+/** Active organizational resources with no hardcoded tile — show from API. */
+export function orgResourcesNotInTiles(resources: Resource[]): Resource[] {
+  const matched = orgResourceIdsMatchedByTiles(resources);
+  return resources.filter((r) => r.is_active && !matched.has(r.id));
+}

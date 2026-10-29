@@ -483,11 +483,13 @@ export function SearchInput({
   onChange,
   placeholder = "Search…",
   id,
+  "aria-label": ariaLabel,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   id?: string;
+  "aria-label"?: string;
 }) {
   const autoId = useId();
   const inputId = id ?? autoId;
@@ -500,6 +502,7 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        aria-label={ariaLabel ?? placeholder}
         className={styles.searchInput}
       />
     </div>

@@ -2436,7 +2436,7 @@
   align-items: flex-end;
 }
 
-.directoryFilters .searchInputWrap {
+.directoryFilters .searchWrap {
   flex: 1 1 12rem;
 }
 

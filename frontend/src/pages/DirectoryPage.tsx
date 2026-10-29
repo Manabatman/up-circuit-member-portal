@@ -70,7 +70,12 @@ export function DirectoryPage() {
       />
 
       <div className={styles.directoryFilters}>
-        <SearchInput value={query} onChange={setQuery} placeholder="Search by name…" />
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          placeholder="Search by name…"
+          aria-label="Search members by name"
+        />
         <label className={styles.directoryFilterLabel}>
           <span className={styles.srOnly}>Filter by division</span>
           <Select

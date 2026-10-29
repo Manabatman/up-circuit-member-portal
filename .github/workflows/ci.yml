@@ -1,0 +1,119 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      APP_ENV: local
+      FRONTEND_ORIGIN: http://localhost:5173
+      BREVO_API_KEY: ""
+      EMAIL_FROM: portal@example.org
+      LOGIN_OTP_REQUIRED: "true"
+      DATABASE_URL: postgresql://circuit_app:ci_app_password@localhost:5432/upcircuit_test
+      MIGRATOR_DATABASE_URL: postgresql://circuit_migrator:ci_migrator_password@localhost:5432/upcircuit_test
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: backend/.python-version
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Bootstrap PostgreSQL roles and test database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE circuit_migrator LOGIN PASSWORD 'ci_migrator_password';
+          CREATE ROLE circuit_app LOGIN PASSWORD 'ci_app_password';
+          CREATE DATABASE upcircuit_test OWNER circuit_migrator;
+          GRANT CONNECT ON DATABASE upcircuit_test TO circuit_app;
+          SQL
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Alembic upgrade head (empty database)
+        run: python -m alembic upgrade head
+
+      - name: Pytest
+        run: python -m pytest
+
+      - name: pip-audit
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    env:
+      VITE_API_BASE_URL: http://localhost:8000
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: npm audit
+        run: npm audit

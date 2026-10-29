@@ -11,7 +11,22 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import settings
 
-engine = create_engine(settings.sqlalchemy_database_url())
+# Mode-independent pool health (Sprint 1.3). Do not set prepare_threshold=None
+# unless production uses the Supabase transaction pooler (port 6543).
+_ENGINE_KWARGS = {
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+    "pool_size": 5,
+    "max_overflow": 5,
+}
+
+
+def sqlalchemy_engine_kwargs() -> dict[str, object]:
+    """Return SQLAlchemy create_engine pool options for tests and documentation."""
+    return dict(_ENGINE_KWARGS)
+
+
+engine = create_engine(settings.sqlalchemy_database_url(), **sqlalchemy_engine_kwargs())
 SessionLocal = sessionmaker(bind=engine)
 
 

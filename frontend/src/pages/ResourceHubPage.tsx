@@ -18,6 +18,7 @@ import {
   ORG_DOCUMENT_TILES,
   ORG_FOLDERS,
   ORG_REQUEST_TILES,
+  orgResourcesNotInTiles,
   resolveOrgTileUrl,
   type OrgFolderId,
 } from "../content/orgResourceTiles";
@@ -85,6 +86,7 @@ export function ResourceHubPage({
 
   const folderMeta = ORG_FOLDERS.find((f) => f.id === folder);
   const tiles = folder === "documents" ? ORG_DOCUMENT_TILES : folder === "requests" ? ORG_REQUEST_TILES : [];
+  const extraResources = useMemo(() => orgResourcesNotInTiles(resources), [resources]);
 
   if (loading) {
     return (
@@ -146,20 +148,44 @@ export function ResourceHubPage({
       {error ? <ErrorState message={error} /> : null}
 
       {!folder ? (
-        <div className={styles.orgFolderGrid}>
-          {filteredFolders.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              className={styles.orgFolderTile}
-              onClick={() => setSearchParams({ folder: entry.id })}
-            >
-              <Icon name="drive" size={28} className="text-bright-blue" />
-              <h2 className="m-0 text-lg font-semibold text-circuit-navy">{entry.label}</h2>
-              <p className="m-0 text-sm text-text-secondary">{entry.description}</p>
-            </button>
-          ))}
-        </div>
+        <>
+          <div className={styles.orgFolderGrid}>
+            {filteredFolders.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                className={styles.orgFolderTile}
+                onClick={() => setSearchParams({ folder: entry.id })}
+              >
+                <Icon name="drive" size={28} className="text-bright-blue" />
+                <h2 className="m-0 text-lg font-semibold text-circuit-navy">{entry.label}</h2>
+                <p className="m-0 text-sm text-text-secondary">{entry.description}</p>
+              </button>
+            ))}
+          </div>
+          {extraResources.length > 0 ? (
+            <section className="mt-8">
+              <h2 className="mb-3 text-lg font-semibold text-circuit-navy">All organizational links</h2>
+              <div className={styles.orgTileGrid}>
+                {extraResources.map((resource) => (
+                  <a
+                    key={resource.id}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={styles.orgResourceTile}
+                  >
+                    <p className="m-0 font-semibold text-circuit-navy">{resource.title}</p>
+                    {resource.description ? (
+                      <p className="m-0 text-sm text-text-secondary">{resource.description}</p>
+                    ) : null}
+                    <span className="text-sm font-semibold text-bright-blue">Open →</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </>
       ) : (
         <div className={styles.orgTileGrid}>
           {tiles.map((tile) => {
@@ -191,6 +217,21 @@ export function ResourceHubPage({
               </a>
             );
           })}
+          {extraResources.map((resource) => (
+            <a
+              key={resource.id}
+              href={resource.url}
+              target="_blank"
+              rel="noreferrer"
+              className={styles.orgResourceTile}
+            >
+              <p className="m-0 font-semibold text-circuit-navy">{resource.title}</p>
+              {resource.description ? (
+                <p className="m-0 text-sm text-text-secondary">{resource.description}</p>
+              ) : null}
+              <span className="text-sm font-semibold text-bright-blue">Open →</span>
+            </a>
+          ))}
         </div>
       )}
 

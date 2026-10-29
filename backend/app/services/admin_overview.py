@@ -12,7 +12,7 @@ from app.models.audit_log import AuditLog
 from app.models.membership_term import MembershipTerm
 from app.models.profile import Profile
 from app.models.user import User
-from app.services.members import _current_year, _membership_status_for_user
+from app.services.members import _current_year, _membership_status_map
 
 
 def get_admin_overview(db: Session) -> dict:
@@ -24,9 +24,10 @@ def get_admin_overview(db: Session) -> dict:
         .order_by(User.created_at.desc())
     ).all()
 
+    status_map = _membership_status_map(db, [user.id for user, _ in members], current_year)
     pending = renewed = not_renewed = 0
     for user, _profile in members:
-        status = _membership_status_for_user(db, user.id, current_year)
+        status = status_map[user.id]
         if status == "PENDING":
             pending += 1
         elif status == "RENEWED":
@@ -42,6 +43,9 @@ def get_admin_overview(db: Session) -> dict:
         .order_by(User.created_at.desc())
         .limit(10)
     ).all()
+    recent_status_map = _membership_status_map(
+        db, [user.id for user, _ in recent_users], current_year
+    )
     recent_registrations = []
     for user, profile in recent_users:
         recent_registrations.append(
@@ -49,9 +53,7 @@ def get_admin_overview(db: Session) -> dict:
                 "user_id": user.id,
                 "full_name": profile.full_name,
                 "email": user.email,
-                "membership_status": _membership_status_for_user(
-                    db, user.id, current_year
-                ),
+                "membership_status": recent_status_map[user.id],
                 "registered_at": user.created_at,
             }
         )

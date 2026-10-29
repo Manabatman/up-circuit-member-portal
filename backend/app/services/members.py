@@ -21,17 +21,24 @@ def _current_year(db: Session) -> AcademicYear | None:
 def _membership_status_for_user(
     db: Session, user_id: uuid.UUID, current_year: AcademicYear | None
 ) -> str:
+    return _membership_status_map(db, [user_id], current_year).get(user_id, "NOT_RENEWED")
+
+
+def _membership_status_map(
+    db: Session, user_ids: list[uuid.UUID], current_year: AcademicYear | None
+) -> dict[uuid.UUID, str]:
+    if not user_ids:
+        return {}
     if current_year is None:
-        return "NOT_RENEWED"
-    term = db.scalar(
-        select(MembershipTerm).where(
-            MembershipTerm.user_id == user_id,
+        return {user_id: "NOT_RENEWED" for user_id in user_ids}
+    rows = db.execute(
+        select(MembershipTerm.user_id, MembershipTerm.status).where(
             MembershipTerm.academic_year_id == current_year.id,
+            MembershipTerm.user_id.in_(user_ids),
         )
-    )
-    if term is None:
-        return "NOT_RENEWED"
-    return term.status
+    ).all()
+    by_user = {user_id: status for user_id, status in rows}
+    return {user_id: by_user.get(user_id, "NOT_RENEWED") for user_id in user_ids}
 
 
 def list_members(
@@ -66,9 +73,10 @@ def list_members(
         stmt = stmt.where(Profile.primary_division_id == division_id)
 
     rows = db.execute(stmt.order_by(Profile.full_name)).all()
+    status_map = _membership_status_map(db, [user.id for user, _, _ in rows], current_year)
     enriched: list[tuple[User, Profile, str, Division | None]] = []
     for user, profile, division in rows:
-        status = _membership_status_for_user(db, user.id, current_year)
+        status = status_map[user.id]
         if membership_status and status != membership_status:
             continue
         enriched.append((user, profile, status, division))

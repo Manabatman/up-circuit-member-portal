@@ -24,7 +24,10 @@ _DEMO_EMAILS = (
 
 @pytest.fixture
 def local_password_from_file() -> str:
-    for line in (BACKEND_ROOT / ".env").read_text(encoding="utf-8-sig").splitlines():
+    env_path = BACKEND_ROOT / ".env"
+    if not env_path.is_file():
+        pytest.skip("backend/.env not present (local dev only; CI uses injected DATABASE_URL)")
+    for line in env_path.read_text(encoding="utf-8-sig").splitlines():
         s = line.strip()
         if s.startswith("DEV_SEED_PASSWORD="):
             return s.split("=", 1)[1]

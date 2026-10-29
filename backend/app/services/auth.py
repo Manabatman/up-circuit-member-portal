@@ -337,7 +337,6 @@ def _registrations_for_ip(db: Session, ip_address: str | None) -> int:
             .where(
                 AuthAttempt.ip_address == normalized,
                 AuthAttempt.attempt_type == "REGISTER",
-                AuthAttempt.success.is_(False),
                 AuthAttempt.created_at >= since,
             )
         )
